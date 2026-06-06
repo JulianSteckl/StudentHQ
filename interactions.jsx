@@ -593,14 +593,14 @@ function ManageSubjectsModal({ onClose }) {
     window.dispatchEvent(new Event("nbStoreChange"));
   };
 
-  const canSave = name.trim().length >= 2 && short.trim().length >= 1;
+  const canSave = name.trim().length >= 2;
 
   const addSubject = () => {
     if (!canSave) return;
     const baseId = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const finalId = window.SUBJECTS.some((s) => s.id === baseId) ? baseId + "-" + Date.now() : baseId;
     const newSubject = {
-      id: finalId, name: name.trim(), short: short.trim().slice(0, 14), color,
+      id: finalId, name: name.trim(), short: (short.trim() || name.trim()).slice(0, 14), color,
       grade: "—", teacher: "—", room: "—", notes: 0, hw: 0, quizzes: 0,
     };
     window.SUBJECTS.push(newSubject);
@@ -748,10 +748,10 @@ function ManageSubjectsModal({ onClose }) {
               onKeyDown={(e) => { if (e.key === "Enter" && canSave) addSubject(); }}
               placeholder="e.g. AP Chemistry, Health, Band" style={fieldInput} />
           </Field>
-          <Field label="Short name (shown in sidebar)">
+          <Field label="Short name (optional — shown in sidebar)">
             <input value={short} onChange={(e) => setShort(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && canSave) addSubject(); }}
-              placeholder="e.g. AP Chem" style={fieldInput} />
+              placeholder="Leave blank to use full name" style={fieldInput} />
           </Field>
           <Field label="Color">
             <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
