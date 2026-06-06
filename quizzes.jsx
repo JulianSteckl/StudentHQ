@@ -62,10 +62,25 @@ function resolveDeck(deckId) {
 // ── Flashcard flip ────────────────────────────────────────────────────────────
 function FlashcardQuiz({ deckId = "bio-respiration", onExit }) {
   const deck = resolveDeck(deckId);
-  const cards = deck.cards;
+  const cards = deck.cards || [];
   const [idx, setIdx] = React.useState(0);
   const [flipped, setFlipped] = React.useState(false);
   const card = cards[idx];
+
+  if (cards.length === 0) {
+    return (
+      <QuizFrame subject={deck.subject} eyebrow={`Flashcards · ${deck.title}`} title={deck.title}
+        current={0} total={0} onExit={onExit} footer={
+          <button className="sn-btn ghost" style={{ width: "100%", justifyContent: "center" }} onClick={onExit}>← Back</button>
+        }>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 260, gap: 12, textAlign: "center" }}>
+          <div style={{ fontFamily: "var(--f-display)", fontSize: 28, color: "var(--ink-3)", opacity: 0.3 }}>◈</div>
+          <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 16 }}>This deck has no cards yet.</div>
+          <div style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--ink-3)" }}>Open Flashcards to add cards to this deck.</div>
+        </div>
+      </QuizFrame>
+    );
+  }
 
   React.useEffect(() => {
     const onKey = (e) => {
