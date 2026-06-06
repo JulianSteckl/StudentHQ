@@ -265,8 +265,11 @@ body, html { margin: 0; padding: 0; }
 .sn-btn:hover { border-color: var(--ink); }
 .sn-btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .sn-btn.primary:hover { background: #000; }
-.sn-btn.ghost { background: transparent; border-color: transparent; }
-.sn-btn.ghost:hover { background: var(--bg-2); }
+.sn-btn.ghost { background: transparent; border-color: var(--hairline); }
+.sn-btn.ghost:hover { background: var(--bg-2); border-color: var(--ink-3); }
+
+/* Notes page search input placeholder */
+.notes-search-input::placeholder { color: var(--ink-2); opacity: 1; }
 .sn-btn.accent { background: var(--accent); color: white; border-color: var(--accent); }
 .sn-btn.icon { padding: 7px; }
 

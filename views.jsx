@@ -3160,6 +3160,15 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
 
   // Metrics strip
   function MetricsStrip() {
+    // mini sparkline for knowledge growth
+    const sparkPts = React.useMemo(() => {
+      const h = 18, w = 56;
+      const baseline = h - 3;
+      if (notesThisWeek === 0) return `M0,${baseline} L${w},${baseline}`;
+      const rise = Math.min(notesThisWeek * 2.5, h - 4);
+      return `M0,${baseline} C${w*0.3},${baseline} ${w*0.5},${baseline - rise * 0.6} ${w},${baseline - rise}`;
+    }, [notesThisWeek]);
+
     const items = [
       { label: "Total Notes",      value: allNotes.length || "0", sub: SUBJECTS.length + " subjects", subColor: "var(--ink-3)" },
       { label: "Active Subject",   value: activeSubject ? activeSubject.short : "—",
@@ -3168,18 +3177,23 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
       { label: "Last Edited",      value: lastEdited ? lastEdited.title.split(" ").slice(0, 2).join(" ") : "—",
         sub: lastEdited ? lastEdited.when : "No notes yet", subColor: "var(--ink-3)" },
       { label: "Knowledge Growth", value: notesThisWeek > 0 ? "+" + notesThisWeek : "0",
-        sub: "notes this week", subColor: notesThisWeek > 0 ? "var(--done)" : "var(--ink-3)", accent: notesThisWeek > 0 },
+        sub: "notes this week", subColor: "var(--ink-3)", spark: true },
     ];
     return (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 16 }}>
         {items.map((s, i) => (
           <div key={i} style={{
             background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: 8, padding: "13px 15px",
-            borderTop: s.accent ? "2px solid " + (typeof s.accent === "object" ? s.accent.color : "var(--done)") : undefined,
+            borderLeft: s.accent && typeof s.accent === "object" ? "3px solid " + s.accent.color : undefined,
           }}>
             <div style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-3)", marginBottom: 7 }}>{s.label}</div>
             <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 20, lineHeight: 1, color: "var(--ink)", marginBottom: 5,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.value}</div>
+            {s.spark ? (
+              <svg width="56" height="18" style={{ display: "block", marginBottom: 4, overflow: "visible" }}>
+                <path d={sparkPts} fill="none" stroke="var(--ink-3)" strokeWidth="1.5" strokeLinecap="round" opacity="0.45" />
+              </svg>
+            ) : null}
             <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: s.subColor }}>{s.sub}</div>
           </div>
         ))}
@@ -3202,11 +3216,11 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
           background: "var(--surface)",
           border: "1px solid " + (searchFocused ? "var(--accent)" : "var(--hairline)"),
           borderRadius: showDropdown ? "8px 8px 0 0" : 8,
-          padding: "0 14px", height: 42,
-          boxShadow: searchFocused ? "0 0 0 3px var(--accent-soft)" : "0 1px 3px rgba(26,22,17,0.04)",
+          padding: "0 16px", height: 48,
+          boxShadow: searchFocused ? "0 0 0 3px var(--accent-soft)" : "0 1px 4px rgba(26,22,17,0.06)",
           transition: "border-color 0.15s, box-shadow 0.15s, border-radius 0.1s",
         }}>
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--ink-3)" strokeWidth="1.6" strokeLinecap="round">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke={searchFocused ? "var(--ink-2)" : "var(--ink-3)"} strokeWidth="1.6" strokeLinecap="round" style={{ flexShrink: 0, transition: "stroke 0.15s" }}>
             <circle cx="6.5" cy="6.5" r="5"/><line x1="10.5" y1="10.5" x2="14.5" y2="14.5"/>
           </svg>
           <input
@@ -3215,7 +3229,8 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setTimeout(() => setSearchFocused(false), 160)}
             placeholder="Search notes, subjects, tags…"
-            style={{ flex: 1, border: "none", outline: "none", fontFamily: "var(--f-ui)", fontSize: 13.5,
+            className="notes-search-input"
+            style={{ flex: 1, border: "none", outline: "none", fontFamily: "var(--f-ui)", fontSize: 14,
               background: "transparent", color: "var(--ink)" }}
           />
           {searchQuery && (
@@ -3340,9 +3355,21 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
           </div>
         </div>
         {shown.length === 0 ? (
-          <div style={{ padding: "20px 14px", fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 14, textAlign: "center" }}>
-            {searchQuery ? "No results for: " + searchQuery : "No notes yet."}
-          </div>
+          searchQuery ? (
+            <div style={{ padding: "24px 14px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textAlign: "center" }}>
+              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 15 }}>No results for "{searchQuery}"</div>
+              <button className="sn-btn ghost" onClick={() => setSearchQuery("")} style={{ fontSize: 11, marginTop: 2 }}>Clear search</button>
+            </div>
+          ) : (
+            <div style={{ padding: "36px 14px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, textAlign: "center" }}>
+              <div style={{ fontFamily: "var(--f-display)", fontSize: 30, color: "var(--ink-3)", opacity: 0.22, lineHeight: 1 }}>¶</div>
+              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 16, lineHeight: 1.35 }}>Nothing written yet.</div>
+              <button className="sn-btn ghost" onClick={newNote}
+                style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 4 }}>
+                Create your first note →
+              </button>
+            </div>
+          )
         ) : (
           shown.map((n, i) => <NoteRow key={n.subjectId + ":" + n.id} n={n} isLast={i === shown.length - 1} />)
         )}
@@ -3401,14 +3428,10 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
             ))}
           </div>
         ) : (
-          <div>
-            <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 12.5, color: "var(--ink-3)", marginBottom: 8 }}>No notes yet.</div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <button onClick={e => { e.stopPropagation(); newNote(); }}
-                style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--accent)",
-                  background: "var(--accent-soft)", border: "1px solid var(--accent)30",
-                  borderRadius: 4, padding: "3px 8px", cursor: "pointer" }}>+ Create note</button>
-            </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 2 }}>
+            <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 13, color: "var(--ink-3)", lineHeight: 1.3 }}>No notes yet.</div>
+            <button onClick={e => { e.stopPropagation(); newNote(); }} className="sn-btn ghost"
+              style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, alignSelf: "flex-start", padding: "4px 10px" }}>+ Create note</button>
           </div>
         )}
       </div>
@@ -3436,9 +3459,12 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
                 style={{ padding: "9px 14px", borderBottom: i < insightItems.length - 1 ? "1px solid var(--hairline)" : "none",
                   background: hov ? "var(--bg-2)" : "transparent", transition: "background 0.13s" }}>
                 <div style={{ fontFamily: "var(--f-mono)", fontSize: 8, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-3)", marginBottom: 3 }}>{item.label}</div>
-                <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 13.5, color: "var(--ink)", lineHeight: 1.2,
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.value}</div>
-                {item.sub && <div style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, color: "var(--ink-3)", marginTop: 2 }}>{item.sub}</div>}
+                <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 13.5,
+                  color: item.value === "—" ? "var(--ink-3)" : "var(--ink)", lineHeight: 1.2,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: item.value === "—" ? 0.5 : 1 }}>{item.value}</div>
+                <div style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, color: "var(--ink-3)", marginTop: 2 }}>
+                  {item.sub || (item.value === "—" ? "no notes yet" : "")}
+                </div>
               </div>
             );
           })}
@@ -3557,7 +3583,7 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
               <span style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase",
                 letterSpacing: "0.12em", color: "var(--ink-3)" }}>Subject Library · {SUBJECTS.length}</span>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px,1fr))", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px,1fr))", gap: 10, paddingBottom: 48 }}>
               {subjectsWithNotes.map(s => <SubjectCard key={s.id} s={s} />)}
               {subjectsEmpty.map(s => <SubjectCard key={s.id} s={s} />)}
             </div>
