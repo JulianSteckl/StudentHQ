@@ -50,7 +50,10 @@
           document.getElementById('clerk-overlay').style.display = 'none';
           resolve(window.Clerk.user);
         } else {
-          window.Clerk.mountSignIn(document.getElementById('clerk-sign-in-mount'));
+          window.Clerk.mountSignIn(document.getElementById('clerk-sign-in-mount'), {
+            afterSignInUrl: '/',
+            afterSignUpUrl: '/',
+          });
           window.Clerk.addListener(({ user }) => {
             if (user) {
               document.getElementById('clerk-overlay').style.display = 'none';
