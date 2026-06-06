@@ -60,23 +60,11 @@ function Onboarding({ onComplete }) {
   }, [signingIn]);
 
   const handleGoogleSignIn = () => {
-    setSigningIn(true);
-    setSignInError("");
-    if (!window.__fbAuth || !window.__fbGoogleProvider) {
-      setSignInError("Auth not ready — reload and try again.");
-      setSigningIn(false);
-      return;
+    const user = window.__clerk?.user;
+    if (user) {
+      const displayName = user.fullName || user.firstName || "";
+      if (displayName) setGoogleName(displayName);
     }
-    const provider = new window.__fbGoogleProvider();
-    window.__fbAuth.signInWithPopup(provider)
-      .then((result) => {
-        // Store Google name so step 1 can pre-fill it
-        if (result.user?.displayName) setGoogleName(result.user.displayName);
-      })
-      .catch((e) => {
-        setSignInError(e.message || "Sign-in failed");
-        setSigningIn(false);
-      });
   };
 
   // Step 1
