@@ -84,7 +84,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
   const dueFor = (id) => Math.abs(id.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % 9;
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
       <SubjectTodayWidget subject={s} onOpenNotes={onOpenNotes} onOpenQuiz={onOpenQuiz} />
 
       {/* Page header */}
@@ -126,8 +126,8 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
           <div className="sn-card-title"><span>Open work</span></div>
           {openHW.length === 0 ? (
             <>
-              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 30, lineHeight: 1, color: "var(--ink-2)", marginBottom: 6 }}>All clear</div>
-              <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>nothing due</div>
+              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 30, lineHeight: 1, color: "var(--ink)", marginBottom: 6 }}>All clear</div>
+              <div className="mono" style={{ fontSize: 11, color: "var(--ink)", marginTop: 6 }}>nothing due</div>
             </>
           ) : (
             <>
