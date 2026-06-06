@@ -23,7 +23,7 @@ function SubjectTodayWidget({ subject: s, onOpenNotes, onOpenQuiz }) {
   if (isEmpty) return null;
 
   return (
-    <div className="sn-card" style={{ marginBottom: 22, borderLeft: `4px solid ${s.color}`, display: "flex", gap: 20, alignItems: "stretch", background: sessionStatus === "now" ? s.color + "0d" : undefined }}>
+    <div className="sn-card pg-section" style={{ marginBottom: 22, borderLeft: `4px solid ${s.color}`, display: "flex", gap: 20, alignItems: "stretch", background: sessionStatus === "now" ? s.color + "0d" : undefined, animationDelay: "0s" }}>
       <div style={{ flex: 1 }}>
         <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--ink-3)", marginBottom: 8 }}>
           {todayDayName} · Today's {s.short} snapshot
@@ -77,7 +77,6 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
   const subjectQuiz = QUIZZES_UPCOMING.find((q) => q.subject === subjectId);
   const subjectNotes = notesForSubject(subjectId).slice(0, 4);
 
-  // Consistent mastery % per deck id (deterministic, never shuffles)
   const masteryFor = (id) => {
     const hash = id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
     return Math.round(40 + (hash % 50));
@@ -87,7 +86,9 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
   return (
     <>
       <SubjectTodayWidget subject={s} onOpenNotes={onOpenNotes} onOpenQuiz={onOpenQuiz} />
-      <div style={{ display: "flex", gap: 18, marginBottom: 24, alignItems: "flex-start" }}>
+
+      {/* Page header */}
+      <div className="pg-header" style={{ display: "flex", gap: 18, marginBottom: 24, alignItems: "flex-start", animationDelay: "0.05s" }}>
         <div style={{ width: 8, alignSelf: "stretch", background: s.color, borderRadius: 2, minHeight: 90 }}></div>
         <div style={{ flex: 1 }}>
           <div className="mono" style={{ fontSize: 10.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
@@ -106,11 +107,10 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
         </div>
       </div>
 
-      {/* Stat strip */}
+      {/* Stat strip — each card staggers in */}
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr", gap: 14, marginBottom: 24 }}>
 
-        {/* Grade card — hero grade on top, sparkline below, delta as subtitle */}
-        <div className="sn-card" style={{ minHeight: 120 }}>
+        <div className="sn-card pg-stat" style={{ minHeight: 120, animationDelay: "0.1s" }}>
           <div className="sn-card-title"><span>Grade · this term</span></div>
           <div style={{ fontFamily: "var(--f-display)", fontSize: 52, lineHeight: 1, color: "var(--ink)", marginBottom: 8 }}>{s.grade}</div>
           <SubjectSparkline color={s.color} />
@@ -119,8 +119,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
           </div>
         </div>
 
-        {/* Open work — "All clear" when nothing due */}
-        <div className="sn-card" style={{ minHeight: 120 }}>
+        <div className="sn-card pg-stat" style={{ minHeight: 120, animationDelay: "0.15s" }}>
           <div className="sn-card-title"><span>Open work</span></div>
           {openHW.length === 0 ? (
             <>
@@ -135,15 +134,13 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
           )}
         </div>
 
-        {/* Next class */}
-        <div className="sn-card" style={{ minHeight: 120 }}>
+        <div className="sn-card pg-stat" style={{ minHeight: 120, animationDelay: "0.2s" }}>
           <div className="sn-card-title"><span>Next class</span></div>
           <div style={{ fontFamily: "var(--f-display)", fontSize: 28, lineHeight: 1.05 }}>Wed</div>
           <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>10:10 AM · ROOM {s.room.toUpperCase()}</div>
         </div>
 
-        {/* Quiz confidence — proper empty state when no quiz */}
-        <div className="sn-card" style={{ minHeight: 120 }}>
+        <div className="sn-card pg-stat" style={{ minHeight: 120, animationDelay: "0.25s" }}>
           <div className="sn-card-title"><span>Quiz confidence</span></div>
           {subjectQuiz ? (
             <>
@@ -168,11 +165,10 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
 
       {/* 2-col body */}
       <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 20 }}>
-        {/* Left: notes + homework */}
+        {/* Left column */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-          {/* Recent notes */}
-          <div className="sn-card" style={{ minHeight: 160 }}>
+          <div className="sn-card pg-section" style={{ minHeight: 160, animationDelay: "0.28s" }}>
             <h3 className="sn-card-title">
               <span>Recent notes</span>
               <a className="mono" onClick={() => onOpenNotes(subjectId)} style={{ color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none", cursor: "pointer" }}>ALL NOTES →</a>
@@ -180,7 +176,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
             {subjectNotes.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {subjectNotes.map((n) => (
-                  <div key={n.id} onClick={() => onOpenNotes(subjectId, n.id)} style={{ paddingBottom: 10, borderBottom: "1px dashed var(--hairline)", cursor: "pointer" }}>
+                  <div key={n.id} onClick={() => onOpenNotes(subjectId, n.id)} className="pg-card-lift" style={{ paddingBottom: 10, borderBottom: "1px dashed var(--hairline)", cursor: "pointer", borderRadius: 3 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                       <div style={{ fontFamily: "var(--f-display)", fontSize: 17 }}>{n.title}</div>
                       <div className="mono" style={{ fontSize: 10.5, color: "var(--ink-3)" }}>{n.when}</div>
@@ -202,8 +198,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
             )}
           </div>
 
-          {/* Homework */}
-          <div className="sn-card" style={{ minHeight: 140 }}>
+          <div className="sn-card pg-section" style={{ minHeight: 140, animationDelay: "0.36s" }}>
             <h3 className="sn-card-title">
               <span>Homework</span>
               <a className="mono" onClick={() => onOpenHomework()} style={{ color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none", cursor: "pointer" }}>ALL →</a>
@@ -223,10 +218,10 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
           </div>
         </div>
 
-        {/* Right: quiz + flashcards + margin note */}
+        {/* Right column */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {subjectQuiz && (
-            <div className="sn-card" style={{ borderLeft: `3px solid ${s.color}` }}>
+            <div className="sn-card pg-section" style={{ borderLeft: `3px solid ${s.color}`, animationDelay: "0.22s" }}>
               <h3 className="sn-card-title"><span>Upcoming quiz</span></h3>
               <div style={{ fontFamily: "var(--f-display)", fontSize: 22, lineHeight: 1.2 }}>{subjectQuiz.title}</div>
               <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 4 }}>{subjectQuiz.when.toUpperCase()} · {subjectQuiz.length}</div>
@@ -237,8 +232,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
             </div>
           )}
 
-          {/* Flashcard decks — with mastery %, proper empty state */}
-          <div className="sn-card" style={{ minHeight: 160 }}>
+          <div className="sn-card pg-section" style={{ minHeight: 160, animationDelay: "0.3s" }}>
             <h3 className="sn-card-title">
               <span>Flashcard decks</span>
               <a onClick={() => onOpenQuiz("flashcard")} className="mono" style={{ color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none", cursor: "pointer" }}>ALL →</a>
@@ -262,7 +256,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
                     const due = dueFor(deckId);
                     const masteryColor = mastery >= 75 ? "var(--done)" : mastery >= 55 ? "var(--ochre)" : "var(--ink-3)";
                     return (
-                      <div key={deckId} onClick={() => onOpenQuiz("flashcard", deckId)}
+                      <div key={deckId} onClick={() => onOpenQuiz("flashcard", deckId)} className="pg-card-lift"
                         style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: i < subjectDecks.length - 1 ? "1px dashed var(--hairline)" : "none", cursor: "pointer" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
@@ -286,8 +280,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
             })()}
           </div>
 
-          {/* Margin note */}
-          <div className="sn-card paper">
+          <div className="sn-card paper pg-section" style={{ animationDelay: "0.38s" }}>
             <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>Margin note · pinned</div>
             <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-2)", fontSize: 15, lineHeight: 1.4, borderLeft: "2px solid var(--accent)", paddingLeft: 12 }}>
               {s.id === "ap-bio" && "Lab report needs three graphs (not two) + outliers discussion."}
@@ -304,11 +297,11 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
 }
 
 function SubjectSparkline({ color }) {
-  const pts  = [78, 82, 80, 85, 84, 87, 90, 89];
+  const pts   = [78, 82, 80, 85, 84, 87, 90, 89];
   const dates = ["Jan 18", "Feb 1", "Feb 15", "Mar 1", "Mar 15", "Apr 1", "Apr 15", "May 1"];
   const w = 120, h = 36;
   const max = 100, min = 70;
-  const [tip, setTip] = React.useState(null); // { x, y, value, date }
+  const [tip, setTip] = React.useState(null);
 
   const coords = pts.map((p, i) => ({
     x: (i / (pts.length - 1)) * w,
@@ -330,10 +323,7 @@ function SubjectSparkline({ color }) {
             fill={i === coords.length - 1 ? color : "var(--surface)"}
             stroke={color} strokeWidth="1.5"
             style={{ cursor: "pointer" }}
-            onMouseEnter={(e) => {
-              const rect = e.currentTarget.closest("svg").getBoundingClientRect();
-              setTip({ x: c.x, y: c.y, value: c.value, date: c.date });
-            }}
+            onMouseEnter={() => setTip({ x: c.x, y: c.y, value: c.value, date: c.date })}
             onMouseLeave={() => setTip(null)}
           />
         ))}
