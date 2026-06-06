@@ -882,7 +882,75 @@ function ApiKeyModal({ onClose }) {
   );
 }
 
-Object.assign(window, { CommandPalette, QuickAdd, AIHelper, PomodoroChip, ToastHost, HomeworkDetail, ScheduleEditor, AINoteDraft, ManageSubjectsModal, ApiKeyModal });
+function ClassInfoModal({ subjectId, onClose }) {
+  const s = subjectBy(subjectId);
+  if (!s) return null;
+
+  const [room, setRoom]       = React.useState(s.room    === "—" ? "" : s.room);
+  const [teacher, setTeacher] = React.useState(s.teacher === "—" ? "" : s.teacher);
+  const [period, setPeriod]   = React.useState(s.period  != null ? String(s.period) : "");
+
+  const persistSubjects = () => {
+    let profile = {};
+    try { profile = JSON.parse(localStorage.getItem("nb-profile-v1") || "{}") || {}; } catch {}
+    profile.subjects = [...window.SUBJECTS];
+    try { localStorage.setItem("nb-profile-v1", JSON.stringify(profile)); } catch {}
+    if (window.nbSyncNow) window.nbSyncNow();
+    window.dispatchEvent(new Event("nbStoreChange"));
+  };
+
+  const save = () => {
+    const subj = window.SUBJECTS.find(x => x.id === subjectId);
+    if (!subj) return;
+    subj.room    = room.trim()    || "—";
+    subj.teacher = teacher.trim() || "—";
+    if (period.trim()) subj.period = period.trim();
+    persistSubjects();
+    window.dispatchEvent(new CustomEvent("toast", { detail: "Class info saved" }));
+    onClose();
+  };
+
+  const inp = {
+    width: "100%", padding: "7px 10px",
+    border: "1px solid var(--hairline)", borderRadius: 4,
+    fontFamily: "var(--f-mono)", fontSize: 13, color: "var(--ink)",
+    background: "var(--surface)", outline: "none",
+  };
+
+  return (
+    <Modal onClose={onClose} width={400}>
+      <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--hairline)" }}>
+        <div className="mono" style={{ fontSize: 10.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Class info</div>
+        <div style={{ fontFamily: "var(--f-display)", fontSize: 24, lineHeight: 1.1, marginTop: 4 }}>
+          <em style={{ color: "var(--accent)", fontStyle: "italic" }}>{s.short}</em>
+        </div>
+      </div>
+      <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <Field label="Room number">
+          <input autoFocus value={room} onChange={e => setRoom(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && save()}
+            placeholder="e.g. 204, B12, Gym" style={inp} />
+        </Field>
+        <Field label="Teacher">
+          <input value={teacher} onChange={e => setTeacher(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && save()}
+            placeholder="e.g. Ms. Halverson" style={inp} />
+        </Field>
+        <Field label="Period">
+          <input value={period} onChange={e => setPeriod(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && save()}
+            placeholder="e.g. 3, 4B, Block 2" style={inp} />
+        </Field>
+      </div>
+      <div style={{ padding: "12px 24px", borderTop: "1px solid var(--hairline)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+        <button className="sn-btn ghost" onClick={onClose}>Cancel</button>
+        <button className="sn-btn primary" onClick={save}>Save</button>
+      </div>
+    </Modal>
+  );
+}
+
+Object.assign(window, { CommandPalette, QuickAdd, AIHelper, PomodoroChip, ToastHost, HomeworkDetail, ScheduleEditor, AINoteDraft, ManageSubjectsModal, ApiKeyModal, ClassInfoModal });
 
 // ─────────────── Schedule editor — edit bell times for each period
 

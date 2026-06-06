@@ -76,6 +76,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
   const urgentCount = openHW.filter(h => h.urgent).length;
   const subjectQuiz = QUIZZES_UPCOMING.find((q) => q.subject === subjectId);
   const subjectNotes = notesForSubject(subjectId).slice(0, 4);
+  const [classInfoOpen, setClassInfoOpen] = React.useState(false);
 
   const masteryFor = (id) => {
     const hash = id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -105,7 +106,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
         <div style={{ width: 8, alignSelf: "stretch", background: s.color, borderRadius: 2, minHeight: 90 }}></div>
         <div style={{ flex: 1 }}>
           <div className="mono" style={{ fontSize: 10.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
-            {s.short} · Period {(SUBJECTS.indexOf(s) % 7) + 1} · Room {s.room} · {s.teacher}
+            {s.short}{s.period ? ` · Period ${s.period}` : ""}{s.room && s.room !== "—" ? ` · Room ${s.room}` : ""}{s.teacher && s.teacher !== "—" ? ` · ${s.teacher}` : ""}
           </div>
           <h1 className="serif" style={{ fontFamily: "var(--f-display)", fontSize: 44, lineHeight: 1.05, margin: "6px 0 6px", letterSpacing: "-0.015em" }}>
             {s.name}
@@ -115,7 +116,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button className="sn-btn ghost" onClick={() => window.dispatchEvent(new CustomEvent("toast", { detail: `${s.name} · Period ${(SUBJECTS.indexOf(s) % 7) + 1} · Room ${s.room} · ${s.teacher}` }))}>Class info</button>
+          <button className="sn-btn ghost" onClick={() => setClassInfoOpen(true)}>Class info</button>
           <button className="sn-btn" onClick={() => onOpenNotes(subjectId)}>Open notes →</button>
         </div>
       </div>
@@ -307,6 +308,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
           </div>
         </div>
       </div>
+      {classInfoOpen && <ClassInfoModal subjectId={subjectId} onClose={() => setClassInfoOpen(false)} />}
     </div>
   );
 }
