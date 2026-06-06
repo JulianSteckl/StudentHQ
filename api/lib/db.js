@@ -4,7 +4,11 @@ async function kvGet(key) {
     headers: { Authorization: 'Bearer ' + process.env.KV_REST_API_TOKEN },
   });
   const json = await res.json();
-  return json.result ? JSON.parse(json.result) : null;
+  if (!json.result) return null;
+  const parsed = JSON.parse(json.result);
+  // Handle legacy double-encoded data
+  if (typeof parsed === 'string') return JSON.parse(parsed);
+  return parsed;
 }
 
 async function kvSet(key, value) {
@@ -15,7 +19,7 @@ async function kvSet(key, value) {
       Authorization: 'Bearer ' + process.env.KV_REST_API_TOKEN,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(JSON.stringify(value)),
+    body: JSON.stringify(value),
   });
 }
 
