@@ -254,30 +254,42 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
               <a onClick={() => onOpenQuiz("flashcard")} className="mono" style={{ color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none", cursor: "pointer" }}>ALL →</a>
             </h3>
             {(() => {
-              const subjectDecks = Object.entries(DECKS).filter(([_, d]) => d.subject === s.id);
-              if (subjectDecks.length === 0) {
+              const builtinDecks = Object.entries(DECKS)
+                .filter(([_, d]) => d.subject === s.id)
+                .map(([id, d]) => ({ id, ...d }));
+              const customDecks = nbGetCustomDecks().filter(d => d.subject === s.id);
+              const allDecks = [...builtinDecks, ...customDecks];
+
+              const createDeck = () => {
+                const title = window.prompt("Deck name (e.g. Unit 3 Vocab, Chapter 5 Terms)");
+                if (!title || !title.trim()) return;
+                const rec = nbAddCustomDeck({ title: title.trim(), subject: s.id, cards: [] });
+                window.dispatchEvent(new CustomEvent("toast", { detail: `"${rec.title}" created — open Flashcards to add cards` }));
+              };
+
+              if (allDecks.length === 0) {
                 return (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 0", gap: 10, textAlign: "center" }}>
                     <div style={{ fontFamily: "var(--f-display)", fontSize: 26, color: "var(--ink-3)", opacity: 0.3, lineHeight: 1 }}>◈</div>
                     <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 15, lineHeight: 1.35 }}>No decks for {s.short} yet.</div>
-                    <button className="sn-btn ghost" onClick={() => window.dispatchEvent(new CustomEvent("toast", { detail: "Open Flashcards to create a deck" }))}
+                    <button className="sn-btn ghost" onClick={createDeck}
                       style={{ fontSize: 11.5, marginTop: 2 }}>+ Create deck</button>
                   </div>
                 );
               }
               return (
                 <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  {subjectDecks.map(([deckId, d], i) => {
-                    const mastery = masteryFor(deckId);
-                    const due = dueFor(deckId);
+                  {allDecks.map((d, i) => {
+                    const mastery = masteryFor(d.id);
+                    const due = dueFor(d.id);
                     const masteryColor = mastery >= 75 ? "var(--done)" : mastery >= 55 ? "var(--ochre)" : "var(--ink-3)";
                     return (
-                      <div key={deckId} onClick={() => onOpenQuiz("flashcard", deckId)} className="pg-card-lift"
-                        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: i < subjectDecks.length - 1 ? "1px dashed var(--hairline)" : "none", cursor: "pointer" }}>
+                      <div key={d.id} onClick={() => onOpenQuiz("flashcard", d.id)} className="pg-card-lift"
+                        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: i < allDecks.length - 1 ? "1px dashed var(--hairline)" : "none", cursor: "pointer" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
-                            <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>{d.cards.length} CARDS</div>
+                            <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>{(d.cards || []).length} CARDS</div>
                             {due > 0 && <div className="mono" style={{ fontSize: 10, color: "var(--accent)" }}>{due} DUE</div>}
                           </div>
                         </div>
@@ -291,6 +303,10 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
                       </div>
                     );
                   })}
+                  <div style={{ paddingTop: 8, textAlign: "right" }}>
+                    <button className="sn-btn ghost" onClick={createDeck}
+                      style={{ fontSize: 11, padding: "3px 8px" }}>+ Create deck</button>
+                  </div>
                 </div>
               );
             })()}
