@@ -5,6 +5,6 @@
     "node": "24.x"
   },
   "dependencies": {
-    "@clerk/backend": "^1.0.0"
+    "fast-jwt": "^3.0.0"
   }
 }
