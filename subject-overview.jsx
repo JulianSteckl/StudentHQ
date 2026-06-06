@@ -68,6 +68,42 @@ function SubjectTodayWidget({ subject: s, onOpenNotes, onOpenQuiz }) {
   );
 }
 
+function DeckRow({ d, i, allDecks, mastery, due, masteryColor, isCustom, onOpen, onDelete }) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      onClick={onOpen} className="pg-card-lift"
+      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0",
+        borderBottom: i < allDecks.length - 1 ? "1px dashed var(--hairline)" : "none", cursor: "pointer" }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
+          <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>{(d.cards || []).length} CARDS</div>
+          {due > 0 && <div className="mono" style={{ fontSize: 10, color: "var(--accent)" }}>{due} DUE</div>}
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        {isCustom && (
+          <button
+            onClick={e => { e.stopPropagation(); onDelete(); }}
+            style={{
+              background: "none", border: "none", cursor: "pointer", padding: "2px 5px",
+              fontFamily: "var(--f-mono)", fontSize: 10, color: hov ? "var(--danger, #c0392b)" : "var(--ink-3)",
+              opacity: hov ? 1 : 0, transition: "opacity 0.15s, color 0.15s", borderRadius: 3,
+            }}
+            title="Delete deck">✕</button>
+        )}
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontFamily: "var(--f-mono)", fontSize: 11, fontWeight: 600, color: masteryColor }}>{mastery}%</div>
+          <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>mastery</div>
+        </div>
+        <span style={{ color: "var(--ink-3)", fontSize: 12 }}>→</span>
+      </div>
+    </div>
+  );
+}
+
 function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHomework }) {
   const s = subjectBy(subjectId);
   if (!s) return null;
@@ -285,24 +321,18 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
                     const mastery = masteryFor(d.id);
                     const due = dueFor(d.id);
                     const masteryColor = mastery >= 75 ? "var(--done)" : mastery >= 55 ? "var(--ochre)" : "var(--ink-3)";
+                    const isCustom = d.id && d.id.startsWith("deck-");
                     return (
-                      <div key={d.id} onClick={() => onOpenQuiz("flashcard", d.id)} className="pg-card-lift"
-                        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: i < allDecks.length - 1 ? "1px dashed var(--hairline)" : "none", cursor: "pointer" }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
-                            <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>{(d.cards || []).length} CARDS</div>
-                            {due > 0 && <div className="mono" style={{ fontSize: 10, color: "var(--accent)" }}>{due} DUE</div>}
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                          <div style={{ textAlign: "right" }}>
-                            <div style={{ fontFamily: "var(--f-mono)", fontSize: 11, fontWeight: 600, color: masteryColor }}>{mastery}%</div>
-                            <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>mastery</div>
-                          </div>
-                          <span style={{ color: "var(--ink-3)", fontSize: 12 }}>→</span>
-                        </div>
-                      </div>
+                      <DeckRow key={d.id} d={d} i={i} allDecks={allDecks}
+                        mastery={mastery} due={due} masteryColor={masteryColor} isCustom={isCustom}
+                        onOpen={() => onOpenQuiz("flashcard", d.id)}
+                        onDelete={() => {
+                          if (window.confirm(`Delete "${d.title}"? This cannot be undone.`)) {
+                            nbDeleteCustomDeck(d.id);
+                            window.dispatchEvent(new CustomEvent("toast", { detail: `"${d.title}" deleted` }));
+                          }
+                        }}
+                      />
                     );
                   })}
                   <div style={{ paddingTop: 8, textAlign: "right" }}>
