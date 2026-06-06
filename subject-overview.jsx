@@ -84,7 +84,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
   const dueFor = (id) => Math.abs(id.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % 9;
 
   return (
-    <div style={{ minHeight: "calc(100vh - 120px)", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <SubjectTodayWidget subject={s} onOpenNotes={onOpenNotes} onOpenQuiz={onOpenQuiz} />
 
       {/* Page header */}
@@ -126,7 +126,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
           <div className="sn-card-title"><span>Open work</span></div>
           {openHW.length === 0 ? (
             <>
-              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 30, lineHeight: 1, color: "var(--ink)", marginBottom: 6 }}>All clear</div>
+              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 30, lineHeight: 1, color: "var(--ink-2)", marginBottom: 6 }}>All clear</div>
               <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>nothing due</div>
             </>
           ) : (
@@ -209,7 +209,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
               <HomeworkList items={subjectHW} compact />
             ) : (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 0", gap: 8, textAlign: "center" }}>
-                <div style={{ fontFamily: "var(--f-display)", fontSize: 22, color: "var(--done)", opacity: 0.5, lineHeight: 1 }}>✓</div>
+                <div style={{ fontFamily: "var(--f-display)", fontSize: 22, color: "var(--ink-3)", lineHeight: 1 }}>✓</div>
                 <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 15, lineHeight: 1.35 }}>Nothing due for {s.short}.</div>
                 <a onClick={() => window.dispatchEvent(new CustomEvent("openQuickAdd", { detail: { type: "homework" } }))}
                   style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textDecoration: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.08em" }}>
