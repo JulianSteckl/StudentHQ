@@ -82,15 +82,20 @@ async function nbLoadFromCloud() {
 
     if (cloud.profile) {
       try { localStorage.setItem("nb-profile-v1", JSON.stringify(cloud.profile)); } catch(e) {}
+    } else if (prevProfileRaw) {
+      // Local has profile but cloud doesn't — push it up now
+      __nbStore.profile = JSON.parse(prevProfileRaw);
+      nbSyncNow();
     }
 
     const newProfileRaw = cloud.profile ? JSON.stringify(cloud.profile) : null;
     const profileChanged = newProfileRaw && newProfileRaw !== prevProfileRaw;
+    const hasCloudProfile = !!(cloud.profile || prevProfileRaw);
 
     try { localStorage.setItem(NB_STORAGE_KEY, JSON.stringify(__nbStore)); } catch(e) {}
     window.dispatchEvent(new Event("nbStoreChange"));
     window.dispatchEvent(new CustomEvent("nbFirebaseLoaded", {
-      detail: { hasCloudProfile: !!cloud.profile, profileChanged: !!profileChanged }
+      detail: { hasCloudProfile, profileChanged: !!profileChanged }
     }));
   } catch(e) {
     console.warn("nb-store: cloud load failed", e);
