@@ -148,16 +148,23 @@ function App() {
     });
   }, []);
 
-  // When cloud loads a different profile (different subjects), reload so data.jsx picks it up
+  // When cloud loads profile data, update state or reload as needed
   React.useEffect(() => {
     const onLoaded = (e) => {
-      if (e.detail.profileChanged) {
+      if (e.detail.hasCloudProfile && !profile) {
+        // No local profile but cloud has one — load it directly into state
+        try {
+          const restored = JSON.parse(localStorage.getItem("nb-profile-v1") || "null");
+          if (restored) { setProfile(restored); return; }
+        } catch {}
+        setTimeout(() => window.location.reload(), 80);
+      } else if (e.detail.profileChanged) {
         setTimeout(() => window.location.reload(), 80);
       }
     };
     window.addEventListener("nbFirebaseLoaded", onLoaded);
     return () => window.removeEventListener("nbFirebaseLoaded", onLoaded);
-  }, []);
+  }, [profile]);
 
   const handleSignOut = () => {
     window.__clerk?.signOut().then(() => {
