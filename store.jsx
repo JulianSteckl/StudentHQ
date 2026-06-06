@@ -57,14 +57,23 @@ function __nbNotify() {
 // Load state from cloud on sign-in — call once after Clerk is ready
 async function nbLoadFromCloud() {
   const token = await __nbGetToken();
-  if (!token) return;
+  if (!token) {
+    window.dispatchEvent(new CustomEvent("nbFirebaseLoaded", { detail: { hasCloudProfile: false } }));
+    return;
+  }
   try {
     const res = await fetch("/api/state", {
       headers: { "Authorization": "Bearer " + token },
     });
-    if (!res.ok) return;
+    if (!res.ok) {
+      window.dispatchEvent(new CustomEvent("nbFirebaseLoaded", { detail: { hasCloudProfile: false } }));
+      return;
+    }
     const cloud = await res.json();
-    if (!cloud) return;
+    if (!cloud) {
+      window.dispatchEvent(new CustomEvent("nbFirebaseLoaded", { detail: { hasCloudProfile: false } }));
+      return;
+    }
 
     const empty = { notes: {}, homework: [], attachments: {}, schedule: null, prefs: {}, noteEdits: {}, units: {}, customDecks: [], quizzes: [], profile: null };
     const prevProfileRaw = localStorage.getItem("nb-profile-v1");
