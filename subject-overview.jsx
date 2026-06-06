@@ -6,12 +6,10 @@ function SubjectTodayWidget({ subject: s, onOpenNotes, onOpenQuiz }) {
   const todayMinutes = now.getHours() * 60 + now.getMinutes();
   const todayDayName = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][now.getDay()];
 
-  // Find this subject in today's schedule
   const todayPeriod = sched.find((p) => p.subject === s.id);
   const subjectQuiz = QUIZZES_UPCOMING.find((q) => q.subject === s.id);
   const todayHW = [...HOMEWORK, ...nbGetHomework()].filter((h) => h.subject === s.id && !h.done && (h.due === "Tonight" || h.due === "Tomorrow"));
 
-  // Is this class in session, past, or upcoming?
   let sessionStatus = null;
   if (todayPeriod) {
     const start = schedToMinutes(todayPeriod.time);
@@ -75,8 +73,16 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
   if (!s) return null;
   const subjectHW = HOMEWORK.filter((h) => h.subject === subjectId);
   const openHW = subjectHW.filter((h) => !h.done);
+  const urgentCount = openHW.filter(h => h.urgent).length;
   const subjectQuiz = QUIZZES_UPCOMING.find((q) => q.subject === subjectId);
   const subjectNotes = notesForSubject(subjectId).slice(0, 4);
+
+  // Consistent mastery % per deck id (deterministic, never shuffles)
+  const masteryFor = (id) => {
+    const hash = id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+    return Math.round(40 + (hash % 50));
+  };
+  const dueFor = (id) => Math.abs(id.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % 9;
 
   return (
     <>
@@ -102,35 +108,60 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
 
       {/* Stat strip */}
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr", gap: 14, marginBottom: 24 }}>
-        <div className="sn-card">
+
+        {/* Grade card — hero grade on top, sparkline below, delta as subtitle */}
+        <div className="sn-card" style={{ minHeight: 120 }}>
           <div className="sn-card-title"><span>Grade · this term</span></div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <div style={{ fontFamily: "var(--f-display)", fontSize: 52, lineHeight: 1, color: "var(--ink)" }}>{s.grade}</div>
-            <SubjectSparkline color={s.color} />
-          </div>
-          <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>
+          <div style={{ fontFamily: "var(--f-display)", fontSize: 52, lineHeight: 1, color: "var(--ink)", marginBottom: 8 }}>{s.grade}</div>
+          <SubjectSparkline color={s.color} />
+          <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 8 }}>
             <span style={{ color: "var(--done)" }}>↑ 2.4 pts</span> · since last report
           </div>
         </div>
-        <div className="sn-card">
+
+        {/* Open work — "All clear" when nothing due */}
+        <div className="sn-card" style={{ minHeight: 120 }}>
           <div className="sn-card-title"><span>Open work</span></div>
-          <div style={{ fontFamily: "var(--f-display)", fontSize: 38, lineHeight: 1, color: openHW.length > 0 ? "var(--ink)" : "var(--ink-3)" }}>{openHW.length}</div>
-          <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>{openHW.filter(h => h.urgent).length} URGENT</div>
+          {openHW.length === 0 ? (
+            <>
+              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 30, lineHeight: 1, color: "var(--done)", marginBottom: 6 }}>All clear</div>
+              <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>nothing due</div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontFamily: "var(--f-display)", fontSize: 38, lineHeight: 1 }}>{openHW.length}</div>
+              <div className="mono" style={{ fontSize: 11, color: urgentCount > 0 ? "var(--accent)" : "var(--ink-3)", marginTop: 6 }}>{urgentCount} URGENT</div>
+            </>
+          )}
         </div>
-        <div className="sn-card">
+
+        {/* Next class */}
+        <div className="sn-card" style={{ minHeight: 120 }}>
           <div className="sn-card-title"><span>Next class</span></div>
           <div style={{ fontFamily: "var(--f-display)", fontSize: 28, lineHeight: 1.05 }}>Wed</div>
           <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>10:10 AM · ROOM {s.room.toUpperCase()}</div>
         </div>
-        <div className="sn-card">
+
+        {/* Quiz confidence — proper empty state when no quiz */}
+        <div className="sn-card" style={{ minHeight: 120 }}>
           <div className="sn-card-title"><span>Quiz confidence</span></div>
           {subjectQuiz ? (
             <>
-              <div style={{ fontFamily: "var(--f-display)", fontSize: 28 }}>{Math.round(subjectQuiz.confidence * 100)}%</div>
+              <div style={{ fontFamily: "var(--f-display)", fontSize: 38, lineHeight: 1, color: "var(--ink)", marginBottom: 8 }}>{Math.round(subjectQuiz.confidence * 100)}%</div>
               <ConfidenceMeter value={subjectQuiz.confidence} />
+              <div className="mono" style={{ fontSize: 10.5, color: "var(--ink-3)", marginTop: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {subjectQuiz.title.slice(0, 22)} · {subjectQuiz.when}
+              </div>
             </>
           ) : (
-            <div style={{ fontFamily: "var(--f-display)", fontSize: 22, color: "var(--ink-3)" }}>no quiz scheduled</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 2 }}>
+              <ConfidenceMeter value={0} />
+              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 15, color: "var(--ink-3)", lineHeight: 1.35 }}>No quiz on the horizon.</div>
+              <a onClick={() => window.dispatchEvent(new CustomEvent("openQuickAdd", { detail: { type: "quiz" } }))}
+                style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textDecoration: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Schedule one →
+              </a>
+            </div>
           )}
         </div>
       </div>
@@ -139,7 +170,9 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
       <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 20 }}>
         {/* Left: notes + homework */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <div className="sn-card">
+
+          {/* Recent notes */}
+          <div className="sn-card" style={{ minHeight: 160 }}>
             <h3 className="sn-card-title">
               <span>Recent notes</span>
               <a className="mono" onClick={() => onOpenNotes(subjectId)} style={{ color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none", cursor: "pointer" }}>ALL NOTES →</a>
@@ -161,13 +194,16 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
                 ))}
               </div>
             ) : (
-              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 15, padding: "8px 0" }}>
-                No notes yet for {s.short}. Click "Open notes" to create one.
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 0", gap: 8, textAlign: "center" }}>
+                <div style={{ fontFamily: "var(--f-display)", fontSize: 28, color: "var(--ink-3)", opacity: 0.35, lineHeight: 1 }}>¶</div>
+                <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 15, lineHeight: 1.35 }}>No notes for {s.short} yet.</div>
+                <a onClick={() => onOpenNotes(subjectId)} style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textDecoration: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.08em" }}>Open notes to start →</a>
               </div>
             )}
           </div>
 
-          <div className="sn-card">
+          {/* Homework */}
+          <div className="sn-card" style={{ minHeight: 140 }}>
             <h3 className="sn-card-title">
               <span>Homework</span>
               <a className="mono" onClick={() => onOpenHomework()} style={{ color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none", cursor: "pointer" }}>ALL →</a>
@@ -175,12 +211,19 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
             {subjectHW.length > 0 ? (
               <HomeworkList items={subjectHW} compact />
             ) : (
-              <div style={{ padding: "12px 0", fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 15 }}>No open homework for {s.short}. ✓</div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 0", gap: 8, textAlign: "center" }}>
+                <div style={{ fontFamily: "var(--f-display)", fontSize: 22, color: "var(--done)", opacity: 0.5, lineHeight: 1 }}>✓</div>
+                <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 15, lineHeight: 1.35 }}>Nothing due for {s.short}.</div>
+                <a onClick={() => window.dispatchEvent(new CustomEvent("openQuickAdd", { detail: { type: "homework" } }))}
+                  style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textDecoration: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Add homework →
+                </a>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Right: quiz + flashcards + people */}
+        {/* Right: quiz + flashcards + margin note */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {subjectQuiz && (
             <div className="sn-card" style={{ borderLeft: `3px solid ${s.color}` }}>
@@ -194,33 +237,56 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
             </div>
           )}
 
-          <div className="sn-card">
-            <h3 className="sn-card-title"><span>Flashcard decks</span></h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {(() => {
-                const subjectDecks = Object.entries(DECKS).filter(([_, d]) => d.subject === s.id);
-                if (subjectDecks.length === 0) {
-                  return (
-                    <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 14, padding: "8px 0" }}>
-                      No decks yet for {s.short}. Click + to create one.
-                    </div>
-                  );
-                }
-                // Synthesize a "due" count per deck (consistent per-deck so it doesn't shuffle)
-                const dueFor = (id) => Math.abs(id.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % 9;
-                return subjectDecks.map(([deckId, d], i) => (
-                  <div key={deckId} onClick={() => onOpenQuiz("flashcard", deckId)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: i < subjectDecks.length - 1 ? "1px dashed var(--hairline)" : "none", cursor: "pointer" }}>
-                    <div>
-                      <div style={{ fontSize: 13.5 }}>{d.title}</div>
-                      <div className="mono" style={{ fontSize: 10.5, color: "var(--ink-3)", marginTop: 2 }}>{d.cards.length} CARDS · {dueFor(deckId)} DUE</div>
-                    </div>
-                    <span style={{ color: "var(--ink-3)" }}>→</span>
+          {/* Flashcard decks — with mastery %, proper empty state */}
+          <div className="sn-card" style={{ minHeight: 160 }}>
+            <h3 className="sn-card-title">
+              <span>Flashcard decks</span>
+              <a onClick={() => onOpenQuiz("flashcard")} className="mono" style={{ color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none", cursor: "pointer" }}>ALL →</a>
+            </h3>
+            {(() => {
+              const subjectDecks = Object.entries(DECKS).filter(([_, d]) => d.subject === s.id);
+              if (subjectDecks.length === 0) {
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 0", gap: 10, textAlign: "center" }}>
+                    <div style={{ fontFamily: "var(--f-display)", fontSize: 26, color: "var(--ink-3)", opacity: 0.3, lineHeight: 1 }}>◈</div>
+                    <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 15, lineHeight: 1.35 }}>No decks for {s.short} yet.</div>
+                    <button className="sn-btn ghost" onClick={() => window.dispatchEvent(new CustomEvent("toast", { detail: "Open Flashcards to create a deck" }))}
+                      style={{ fontSize: 11.5, marginTop: 2 }}>+ Create deck</button>
                   </div>
-                ));
-              })()}
-            </div>
+                );
+              }
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                  {subjectDecks.map(([deckId, d], i) => {
+                    const mastery = masteryFor(deckId);
+                    const due = dueFor(deckId);
+                    const masteryColor = mastery >= 75 ? "var(--done)" : mastery >= 55 ? "var(--ochre)" : "var(--ink-3)";
+                    return (
+                      <div key={deckId} onClick={() => onOpenQuiz("flashcard", deckId)}
+                        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: i < subjectDecks.length - 1 ? "1px dashed var(--hairline)" : "none", cursor: "pointer" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
+                            <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>{d.cards.length} CARDS</div>
+                            {due > 0 && <div className="mono" style={{ fontSize: 10, color: "var(--accent)" }}>{due} DUE</div>}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontFamily: "var(--f-mono)", fontSize: 11, fontWeight: 600, color: masteryColor }}>{mastery}%</div>
+                            <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>mastery</div>
+                          </div>
+                          <span style={{ color: "var(--ink-3)", fontSize: 12 }}>→</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
 
+          {/* Margin note */}
           <div className="sn-card paper">
             <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>Margin note · pinned</div>
             <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-2)", fontSize: 15, lineHeight: 1.4, borderLeft: "2px solid var(--accent)", paddingLeft: 12 }}>
@@ -238,20 +304,61 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
 }
 
 function SubjectSparkline({ color }) {
-  const pts = [78, 82, 80, 85, 84, 87, 90, 89];
+  const pts  = [78, 82, 80, 85, 84, 87, 90, 89];
+  const dates = ["Jan 18", "Feb 1", "Feb 15", "Mar 1", "Mar 15", "Apr 1", "Apr 15", "May 1"];
   const w = 120, h = 36;
   const max = 100, min = 70;
-  const path = pts.map((p, i) => {
-    const x = (i / (pts.length - 1)) * w;
-    const y = h - ((p - min) / (max - min)) * h;
-    return `${i === 0 ? "M" : "L"} ${x} ${y}`;
-  }).join(" ");
-  const lastY = h - ((pts[pts.length - 1] - min) / (max - min)) * h;
+  const [tip, setTip] = React.useState(null); // { x, y, value, date }
+
+  const coords = pts.map((p, i) => ({
+    x: (i / (pts.length - 1)) * w,
+    y: h - ((p - min) / (max - min)) * h,
+    value: p,
+    date: dates[i],
+  }));
+
+  const path = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ");
+
   return (
-    <svg width={w} height={h} style={{ overflow: "visible" }}>
-      <path d={path} fill="none" stroke={color} strokeWidth="2" />
-      <circle cx={w} cy={lastY} r="3.5" fill={color} />
-    </svg>
+    <div style={{ position: "relative", display: "inline-block" }}>
+      <svg width={w} height={h} style={{ overflow: "visible", display: "block" }}>
+        <path d={path} fill="none" stroke={color} strokeWidth="2" />
+        {coords.map((c, i) => (
+          <circle key={i}
+            cx={c.x} cy={c.y}
+            r={i === coords.length - 1 ? 3.5 : 3}
+            fill={i === coords.length - 1 ? color : "var(--surface)"}
+            stroke={color} strokeWidth="1.5"
+            style={{ cursor: "pointer" }}
+            onMouseEnter={(e) => {
+              const rect = e.currentTarget.closest("svg").getBoundingClientRect();
+              setTip({ x: c.x, y: c.y, value: c.value, date: c.date });
+            }}
+            onMouseLeave={() => setTip(null)}
+          />
+        ))}
+      </svg>
+      {tip && (
+        <div style={{
+          position: "absolute",
+          left: tip.x,
+          top: tip.y - 38,
+          transform: "translateX(-50%)",
+          background: "var(--ink)",
+          color: "var(--bg)",
+          borderRadius: 5,
+          padding: "3px 8px",
+          fontFamily: "var(--f-mono)",
+          fontSize: 10.5,
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+          zIndex: 10,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.22)",
+        }}>
+          {tip.value}% · {tip.date}
+        </div>
+      )}
+    </div>
   );
 }
 
