@@ -33,33 +33,38 @@
 <div id="root"></div>
 
 <!-- Clerk -->
-<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
+<script
+  async
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_test_ZmFtb3VzLW1hbGFtdXRlLTgzLmNsZXJrLmFjY291bnRzLmRldiQ"
+  src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
 <script>
-  window.__clerkReady = (async () => {
-    try {
-      const clerk = new window.Clerk('pk_test_ZmFtb3VzLW1hbGFtdXRlLTgzLmNsZXJrLmFjY291bnRzLmRldiQ');
-      await clerk.load();
-      window.__clerk = clerk;
-      if (clerk.user) {
-        document.getElementById('clerk-overlay').style.display = 'none';
-        return clerk.user;
-      } else {
-        clerk.mountSignIn(document.getElementById('clerk-sign-in-mount'));
-        return new Promise(resolve => {
-          clerk.addListener(({ user }) => {
+  window.__clerkReady = new Promise(resolve => {
+    window.addEventListener('load', async () => {
+      try {
+        await window.Clerk.load();
+        window.__clerk = window.Clerk;
+        if (window.Clerk.user) {
+          document.getElementById('clerk-overlay').style.display = 'none';
+          resolve(window.Clerk.user);
+        } else {
+          window.Clerk.mountSignIn(document.getElementById('clerk-sign-in-mount'));
+          window.Clerk.addListener(({ user }) => {
             if (user) {
               document.getElementById('clerk-overlay').style.display = 'none';
               resolve(user);
             }
           });
-        });
+        }
+      } catch(e) {
+        console.warn('Clerk init failed:', e);
+        document.getElementById('clerk-overlay').style.display = 'none';
+        resolve(null);
       }
-    } catch(e) {
-      console.warn('Clerk init failed:', e);
-      document.getElementById('clerk-overlay').style.display = 'none';
-      return null;
-    }
-  })();
+    });
+  });
 </script>
 
 <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
