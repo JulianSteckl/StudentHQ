@@ -72,7 +72,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
   const s = subjectBy(subjectId);
   if (!s) return null;
   const store = useNbStore();
-  const subjectHW = HOMEWORK.filter((h) => h.subject === subjectId);
+  const subjectHW = [...HOMEWORK, ...nbGetHomework()].filter((h) => h.subject === subjectId);
   const openHW = subjectHW.filter((h) => !h.done);
   const urgentCount = openHW.filter(h => h.urgent).length;
   const subjectQuiz = QUIZZES_UPCOMING.find((q) => q.subject === subjectId);
