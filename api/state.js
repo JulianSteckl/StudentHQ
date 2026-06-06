@@ -1,4 +1,4 @@
-const { getDb } = require('./lib/mongo');
+const { kvGet, kvSet } = require('./lib/db');
 const { getUserId } = require('./lib/auth');
 
 module.exports = async function handler(req, res) {
@@ -12,21 +12,15 @@ module.exports = async function handler(req, res) {
     const userId = await getUserId(req.headers['authorization']);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const db = await getDb();
-    const col = db.collection('state');
+    const key = 'state:' + userId;
 
     if (req.method === 'GET') {
-      const doc = await col.findOne({ userId });
-      return res.status(200).json(doc ? doc.data : null);
+      const data = await kvGet(key);
+      return res.status(200).json(data);
     }
 
     if (req.method === 'POST') {
-      const data = req.body;
-      await col.updateOne(
-        { userId },
-        { $set: { userId, data, updatedAt: new Date() } },
-        { upsert: true }
-      );
+      await kvSet(key, req.body);
       return res.status(200).json({ ok: true });
     }
 
