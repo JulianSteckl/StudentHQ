@@ -84,7 +84,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
   const dueFor = (id) => Math.abs(id.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % 9;
 
   return (
-    <>
+    <div style={{ minHeight: "calc(100vh - 120px)", display: "flex", flexDirection: "column" }}>
       <SubjectTodayWidget subject={s} onOpenNotes={onOpenNotes} onOpenQuiz={onOpenQuiz} />
 
       {/* Page header */}
@@ -112,7 +112,10 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
 
         <div className="sn-card pg-stat" style={{ minHeight: 120, animationDelay: "0.1s" }}>
           <div className="sn-card-title"><span>Grade · this term</span></div>
-          <div style={{ fontFamily: "var(--f-display)", fontSize: 52, lineHeight: 1, color: "var(--ink)", marginBottom: 8 }}>{s.grade}</div>
+          {s.grade && s.grade !== "—"
+            ? <div style={{ fontFamily: "var(--f-display)", fontSize: 52, lineHeight: 1, color: "var(--ink)", marginBottom: 8 }}>{s.grade}</div>
+            : <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 18, lineHeight: 1, color: "var(--ink-3)", marginBottom: 8 }}>No grade yet</div>
+          }
           <SubjectSparkline color={s.color} />
           <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 8 }}>
             <span style={{ color: "var(--done)" }}>↑ 2.4 pts</span> · since last report
@@ -123,7 +126,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
           <div className="sn-card-title"><span>Open work</span></div>
           {openHW.length === 0 ? (
             <>
-              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 30, lineHeight: 1, color: "var(--done)", marginBottom: 6 }}>All clear</div>
+              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 30, lineHeight: 1, color: "var(--ink)", marginBottom: 6 }}>All clear</div>
               <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>nothing due</div>
             </>
           ) : (
@@ -152,7 +155,6 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
             </>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 2 }}>
-              <ConfidenceMeter value={0} />
               <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 15, color: "var(--ink-3)", lineHeight: 1.35 }}>No quiz on the horizon.</div>
               <a onClick={() => window.dispatchEvent(new CustomEvent("openQuickAdd", { detail: { type: "quiz" } }))}
                 style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textDecoration: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.08em" }}>
@@ -292,7 +294,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
