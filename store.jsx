@@ -1,5 +1,5 @@
 // Simple in-memory store for user-added content + attachments.
-// Persists to localStorage so refreshes don't lose state.
+// Persists to localStorage and syncs to MongoDB via /api/state.
 
 const NB_STORAGE_KEY = "nb-state-v1";
 
@@ -16,76 +16,37 @@ const __nbStore = (() => {
   }
 })();
 
-// ── Firebase cloud sync ──
-let __fbUser = null;
-let __fbSyncing = false;
-
-function nbSetFirebaseUser(user) {
-  __fbUser = user;
-  if (!user || !window.__fbDb) return;
-
-  __fbSyncing = true;
-  window.__fbDb.ref(`users/${user.uid}/nb-state`).once("value").then(snapshot => {
-    const cloud = snapshot.val();
-    const empty = { notes: {}, homework: [], attachments: {}, schedule: null, prefs: {}, noteEdits: {}, units: {}, customDecks: [], quizzes: [], profile: null };
-
-    // Snapshot what was in localStorage before we touch anything
-    const prevProfileRaw = localStorage.getItem("nb-profile-v1");
-
-    if (cloud) {
-      // Cloud has data — it's the source of truth
-      const localAtts = __nbStore.attachments || {};
-      Object.assign(__nbStore, { ...empty, ...cloud, attachments: localAtts });
-      // Restore profile from cloud (always trust cloud over local)
-      if (cloud.profile) {
-        try { localStorage.setItem("nb-profile-v1", JSON.stringify(cloud.profile)); } catch(e) {}
-      }
-    } else {
-      // No cloud data yet — push everything local up to Firebase
-      const { attachments, ...syncable } = __nbStore;
-      const _p = (() => { try { return JSON.parse(localStorage.getItem("nb-profile-v1") || "null"); } catch { return null; } })();
-      if (_p) syncable.profile = _p;
-      window.__fbDb.ref(`users/${user.uid}/nb-state`).set(syncable)
-        .catch(e => console.warn("nb-store: initial upload failed", e));
-    }
-
-    const newProfileRaw = cloud && cloud.profile ? JSON.stringify(cloud.profile) : null;
-    const profileChanged = newProfileRaw && newProfileRaw !== prevProfileRaw;
-
-    try { localStorage.setItem(NB_STORAGE_KEY, JSON.stringify(__nbStore)); } catch(e) {}
-    window.dispatchEvent(new Event("nbStoreChange"));
-    window.dispatchEvent(new CustomEvent("nbFirebaseLoaded", {
-      detail: { hasCloudProfile: !!(cloud && cloud.profile), profileChanged: !!profileChanged }
-    }));
-    __fbSyncing = false;
-  }).catch(e => {
-    console.warn("nb-store: Firebase load failed", e);
-    window.dispatchEvent(new CustomEvent("nbFirebaseLoaded", { detail: { hasCloudProfile: false } }));
-    __fbSyncing = false;
-  });
+// ── Clerk + MongoDB cloud sync ──
+async function __nbGetToken() {
+  try {
+    return await window.__clerk?.session?.getToken() || null;
+  } catch {
+    return null;
+  }
 }
 
 let __nbSaveTimer = null;
 function __nbPersist() {
   if (__nbSaveTimer) clearTimeout(__nbSaveTimer);
-  __nbSaveTimer = setTimeout(() => {
+  __nbSaveTimer = setTimeout(async () => {
     try {
       localStorage.setItem(NB_STORAGE_KEY, JSON.stringify(__nbStore));
     } catch (e) {
-      console.warn("nb-store: storage quota exceeded — attachments may not persist", e);
+      console.warn("nb-store: storage quota exceeded", e);
     }
-    // Also sync to Firebase when signed in (exclude attachments — base64 is too large)
-    if (__fbUser && window.__fbDb && !__fbSyncing) {
-      try {
-        const { attachments, ...syncable } = __nbStore;
-        // Always include the latest profile so subjects sync across devices
-        const _p = (() => { try { return JSON.parse(localStorage.getItem("nb-profile-v1") || "null"); } catch { return null; } })();
-        if (_p) syncable.profile = _p;
-        window.__fbDb.ref(`users/${__fbUser.uid}/nb-state`).set(syncable)
-          .catch(e => console.warn("nb-store: Firebase sync failed", e));
-      } catch(e) { console.warn("nb-store: sync error", e); }
-    }
-  }, 200);
+    const token = await __nbGetToken();
+    if (!token) return;
+    try {
+      const { attachments, ...syncable } = __nbStore;
+      const _p = (() => { try { return JSON.parse(localStorage.getItem("nb-profile-v1") || "null"); } catch { return null; } })();
+      if (_p) syncable.profile = _p;
+      fetch("/api/state", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify(syncable),
+      }).catch(e => console.warn("nb-store: cloud save failed", e));
+    } catch(e) { console.warn("nb-store: sync error", e); }
+  }, 400);
 }
 
 function __nbNotify() {
@@ -93,15 +54,54 @@ function __nbNotify() {
   __nbPersist();
 }
 
-// Immediately push current state + profile to Firebase (call after onboarding finishes)
-function nbSyncNow() {
-  if (!__fbUser || !window.__fbDb) return;
+// Load state from cloud on sign-in — call once after Clerk is ready
+async function nbLoadFromCloud() {
+  const token = await __nbGetToken();
+  if (!token) return;
+  try {
+    const res = await fetch("/api/state", {
+      headers: { "Authorization": "Bearer " + token },
+    });
+    if (!res.ok) return;
+    const cloud = await res.json();
+    if (!cloud) return;
+
+    const empty = { notes: {}, homework: [], attachments: {}, schedule: null, prefs: {}, noteEdits: {}, units: {}, customDecks: [], quizzes: [], profile: null };
+    const prevProfileRaw = localStorage.getItem("nb-profile-v1");
+    const localAtts = __nbStore.attachments || {};
+    Object.assign(__nbStore, { ...empty, ...cloud, attachments: localAtts });
+
+    if (cloud.profile) {
+      try { localStorage.setItem("nb-profile-v1", JSON.stringify(cloud.profile)); } catch(e) {}
+    }
+
+    const newProfileRaw = cloud.profile ? JSON.stringify(cloud.profile) : null;
+    const profileChanged = newProfileRaw && newProfileRaw !== prevProfileRaw;
+
+    try { localStorage.setItem(NB_STORAGE_KEY, JSON.stringify(__nbStore)); } catch(e) {}
+    window.dispatchEvent(new Event("nbStoreChange"));
+    window.dispatchEvent(new CustomEvent("nbFirebaseLoaded", {
+      detail: { hasCloudProfile: !!cloud.profile, profileChanged: !!profileChanged }
+    }));
+  } catch(e) {
+    console.warn("nb-store: cloud load failed", e);
+    window.dispatchEvent(new CustomEvent("nbFirebaseLoaded", { detail: { hasCloudProfile: false } }));
+  }
+}
+
+// Push current state to cloud immediately (call after onboarding finishes)
+async function nbSyncNow() {
+  const token = await __nbGetToken();
+  if (!token) return;
   try {
     const { attachments, ...syncable } = __nbStore;
     const _p = (() => { try { return JSON.parse(localStorage.getItem("nb-profile-v1") || "null"); } catch { return null; } })();
     if (_p) syncable.profile = _p;
-    window.__fbDb.ref(`users/${__fbUser.uid}/nb-state`).set(syncable)
-      .catch(e => console.warn("nb-store: nbSyncNow failed", e));
+    fetch("/api/state", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+      body: JSON.stringify(syncable),
+    }).catch(e => console.warn("nb-store: nbSyncNow failed", e));
   } catch(e) { console.warn("nb-store: nbSyncNow error", e); }
 }
 
@@ -153,7 +153,7 @@ function nbAddAttachment(subjectId, noteId, file) {
         name: file.name,
         type: file.type || "application/octet-stream",
         size: file.size,
-        url: e.target.result, // data URL
+        url: e.target.result,
         addedAt: Date.now(),
       };
       if (!__nbStore.attachments[key]) __nbStore.attachments[key] = [];
@@ -176,7 +176,6 @@ function nbGetAttachments(subjectId, noteId) {
   return __nbStore.attachments[subjectId + ":" + noteId] || [];
 }
 
-// Editable note content — overrides built-in NOTES_BY_SUBJECT entries by id.
 function nbUpdateNoteContent(noteId, patch) {
   if (!__nbStore.noteEdits) __nbStore.noteEdits = {};
   __nbStore.noteEdits[noteId] = { ...(__nbStore.noteEdits[noteId] || {}), ...patch };
@@ -186,7 +185,6 @@ function nbGetNoteOverride(noteId) {
   return (__nbStore.noteEdits || {})[noteId];
 }
 
-// Schedule (bell times)
 function nbGetSchedule() {
   return __nbStore.schedule || SCHEDULE_TODAY;
 }
@@ -212,7 +210,6 @@ function nbSetApiKey(key) {
   window.dispatchEvent(new Event("apiKeyChanged"));
 }
 async function aiComplete(prompt) {
-  // Try Claude Code's injected client first; if it throws, fall through to direct API
   if (typeof window.claude !== "undefined" && typeof window.claude.complete === "function") {
     try {
       const result = await window.claude.complete(prompt);
@@ -222,7 +219,6 @@ async function aiComplete(prompt) {
     }
   }
 
-  // Direct Anthropic API with stored key
   const key = nbGetApiKey();
   if (!key) throw new Error("no-key");
 
@@ -258,7 +254,6 @@ async function aiComplete(prompt) {
   return data.content?.[0]?.text || "";
 }
 
-// Generic prefs (homepage card visibility, etc.)
 function nbGetPref(key, fallback) {
   return __nbStore.prefs && __nbStore.prefs[key] !== undefined ? __nbStore.prefs[key] : fallback;
 }
@@ -268,7 +263,6 @@ function nbSetPref(key, value) {
   __nbNotify();
 }
 
-// Update homework status — mutating both the user-added and built-in lists.
 function nbToggleHomework(id) {
   const u = __nbStore.homework.find((h) => h.id === id);
   if (u) { u.done = !u.done; __nbNotify(); return; }
@@ -276,7 +270,6 @@ function nbToggleHomework(id) {
   if (b) { b.done = !b.done; __nbNotify(); }
 }
 
-// React hook — subscribes a component to store changes.
 function useNbStore() {
   const [, force] = React.useReducer((x) => x + 1, 0);
   React.useEffect(() => {
@@ -291,7 +284,6 @@ function useNbStore() {
   };
 }
 
-// ── Unit management (per-subject categories for notes) ──
 function nbGetUnits(subjectId) {
   if (!__nbStore.units) __nbStore.units = {};
   return __nbStore.units[subjectId] || [];
@@ -309,7 +301,6 @@ function nbAddUnit(subjectId, name) {
 function nbDeleteUnit(subjectId, unitId) {
   if (!__nbStore.units || !__nbStore.units[subjectId]) return;
   __nbStore.units[subjectId] = __nbStore.units[subjectId].filter((u) => u.id !== unitId);
-  // Move notes that were in this unit back to "none"
   if (__nbStore.notes[subjectId]) {
     __nbStore.notes[subjectId] = __nbStore.notes[subjectId].map((n) =>
       n.unitId === unitId ? { ...n, unitId: null } : n
@@ -344,7 +335,6 @@ function fileIconFor(type, name) {
   return "FILE";
 }
 
-// ── Custom flashcard decks (imported from Quizlet, etc.) ──
 function nbAddCustomDeck(deck) {
   if (!__nbStore.customDecks) __nbStore.customDecks = [];
   const id = "deck-" + Date.now().toString(36);
@@ -362,20 +352,17 @@ function nbDeleteCustomDeck(id) {
   __nbNotify();
 }
 
-// ── Note deletion ──
 function nbDeleteNote(subjectId, noteId) {
   if (!__nbStore.notes[subjectId]) return;
   __nbStore.notes[subjectId] = __nbStore.notes[subjectId].filter((n) => n.id !== noteId);
   __nbNotify();
 }
 
-// ── Homework deletion ──
 function nbDeleteHomework(id) {
   __nbStore.homework = (__nbStore.homework || []).filter((h) => h.id !== id);
   __nbNotify();
 }
 
-// ── User-added quiz store ──
 function nbAddQuiz(quiz) {
   if (!__nbStore.quizzes) __nbStore.quizzes = [];
   const id = "q-" + Date.now().toString(36);
@@ -393,8 +380,6 @@ function nbDeleteQuiz(id) {
   __nbNotify();
 }
 
-// ── Study streak tracker ──
-// Reads from nb-streak-v1 in localStorage; auto-advances on each new day.
 function nbGetStreak() {
   const KEY = "nb-streak-v1";
   const today = new Date().toDateString();
@@ -425,7 +410,7 @@ function nbGetStreakData() {
 }
 
 Object.assign(window, {
-  nbSetFirebaseUser,
+  nbLoadFromCloud, nbSyncNow,
   nbAddNote, nbDeleteNote, nbAddHomework, nbDeleteHomework, nbGetNotes, nbGetHomework,
   nbAddAttachment, nbRemoveAttachment, nbGetAttachments,
   nbUpdateNoteContent, nbGetNoteOverride,
@@ -436,6 +421,6 @@ Object.assign(window, {
   nbGetUnits, nbAddUnit, nbDeleteUnit, nbSetNoteUnit,
   nbAddCustomDeck, nbGetCustomDecks, nbDeleteCustomDeck,
   nbAddQuiz, nbGetQuizzes, nbDeleteQuiz,
-  nbGetStreak, nbGetStreakData, nbSyncNow,
+  nbGetStreak, nbGetStreakData,
   useNbStore, fmtFileSize, fileIconFor,
 });
