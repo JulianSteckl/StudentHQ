@@ -148,17 +148,10 @@ function App() {
     });
   }, []);
 
-  // When cloud loads profile data, update state or reload as needed
+  // When cloud loads profile data, reload so data.jsx picks it up fresh
   React.useEffect(() => {
     const onLoaded = (e) => {
-      if (e.detail.hasCloudProfile && !profile) {
-        // No local profile but cloud has one — load it directly into state
-        try {
-          const restored = JSON.parse(localStorage.getItem("nb-profile-v1") || "null");
-          if (restored) { setProfile(restored); return; }
-        } catch {}
-        setTimeout(() => window.location.reload(), 80);
-      } else if (e.detail.profileChanged) {
+      if ((e.detail.hasCloudProfile && !profile) || e.detail.profileChanged) {
         setTimeout(() => window.location.reload(), 80);
       }
     };
