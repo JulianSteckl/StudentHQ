@@ -3158,21 +3158,13 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
     );
   }
 
-  // Metrics strip — computed outside any nested component to avoid hook instability
-  const growthSparkPath = (() => {
-    const w = 56, baseline = 15;
-    if (notesThisWeek === 0) return `M0,${baseline} L${w},${baseline}`;
-    const rise = Math.min(notesThisWeek * 2.5, 13);
-    return `M0,${baseline} C${w * 0.3},${baseline} ${w * 0.5},${baseline - rise * 0.6} ${w},${baseline - rise}`;
-  })();
-
   function MetricsStrip() {
     const items = [
       { label: "Total Notes",      value: allNotes.length || "0",
         sub: SUBJECTS.length + " subjects", subColor: "var(--ink-3)" },
       { label: "Active Subject",   value: activeSubject ? activeSubject.short : "—",
         sub: activeSubject ? (subjectNoteCounts[activeSubject.id] || 0) + " notes" : "No notes yet",
-        subColor: "var(--ink-3)" },
+        subColor: "var(--ink-3)", accent: true },
       { label: "Last Edited",      value: lastEdited ? lastEdited.title.split(" ").slice(0, 2).join(" ") : "—",
         sub: lastEdited ? lastEdited.when : "No notes yet", subColor: "var(--ink-3)" },
       { label: "Knowledge Growth", value: notesThisWeek > 0 ? "+" + notesThisWeek : "0",
@@ -3183,15 +3175,23 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
         {items.map((item, i) => (
           <div key={i} style={{
             background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: 8, padding: "13px 15px",
+            borderLeft: item.accent ? "2px solid var(--accent)" : "1px solid var(--hairline)",
           }}>
             <div style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-3)", marginBottom: 7 }}>{item.label}</div>
             <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 20, lineHeight: 1, color: "var(--ink)", marginBottom: 5,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.value}</div>
-            {item.spark && (
-              <svg width="56" height="18" style={{ display: "block", marginBottom: 4, overflow: "visible" }}>
-                <path d={growthSparkPath} fill="none" stroke="var(--ink-3)" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.5" />
-              </svg>
-            )}
+            {item.spark && (() => {
+              const w = 56, bl = 15;
+              const rise = Math.min(notesThisWeek * 2.5, 13);
+              const d = notesThisWeek === 0
+                ? `M0,${bl} L${w},${bl}`
+                : `M0,${bl} C${w*0.3},${bl} ${w*0.5},${bl - rise*0.6} ${w},${bl - rise}`;
+              return (
+                <svg width="56" height="18" style={{ display: "block", marginBottom: 4 }}>
+                  <path d={d} fill="none" stroke="var(--ink-3)" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.5" />
+                </svg>
+              );
+            })()}
             <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: item.subColor }}>{item.sub}</div>
           </div>
         ))}
@@ -3553,14 +3553,16 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <>
-      <PageHeader
-        eyebrow="Notes"
-        italic="Notes."
-        meta="Your personal knowledge base."
-        actions={<>
+      <div className="pg-header" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+        <div>
+          <div style={{ fontFamily: "var(--f-mono)", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-3)", marginBottom: 8 }}>Notes</div>
+          <h1 style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: "2.2rem", color: "var(--ink)", margin: 0, fontWeight: 400, lineHeight: 1.05 }}>Notes.</h1>
+          <div style={{ color: "var(--ink-2)", marginTop: 6, fontSize: "0.95rem" }}>Your personal knowledge base.</div>
+        </div>
+        <div style={{ paddingTop: 6 }}>
           <button className="sn-btn ghost" onClick={newNote}>+ New note</button>
-        </>}
-      />
+        </div>
+      </div>
 
       <div className="pg-section" style={{ animationDelay: "0.15s" }}><MetricsStrip /></div>
       <div className="pg-section" style={{ animationDelay: "0.2s" }}><SearchBar /></div>
