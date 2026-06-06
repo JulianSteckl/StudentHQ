@@ -46,7 +46,6 @@
       try {
         await window.Clerk.load();
         window.__clerk = window.Clerk;
-        window.Clerk.addListener((e) => console.log('[clerk]', JSON.stringify(e)));
         if (window.Clerk.user) {
           document.getElementById('clerk-overlay').style.display = 'none';
           resolve(window.Clerk.user);
