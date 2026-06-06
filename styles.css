@@ -215,8 +215,8 @@ body, html { margin: 0; padding: 0; }
 .sn-pageheader { margin-bottom: 22px; display: flex; align-items: flex-end; gap: 24px; }
 .sn-pageheader .titleblock { flex: 1; min-width: 0; }
 .sn-pageheader .eyebrow {
-  font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-2);
-  text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px;
+  font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-3);
+  text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 6px;
 }
 .sn-pageheader h1 {
   font-family: var(--f-display); font-weight: 400;

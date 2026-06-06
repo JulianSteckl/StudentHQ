@@ -3158,22 +3158,21 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
     );
   }
 
-  // Metrics strip
-  function MetricsStrip() {
-    // mini sparkline for knowledge growth
-    const sparkPts = React.useMemo(() => {
-      const h = 18, w = 56;
-      const baseline = h - 3;
-      if (notesThisWeek === 0) return `M0,${baseline} L${w},${baseline}`;
-      const rise = Math.min(notesThisWeek * 2.5, h - 4);
-      return `M0,${baseline} C${w*0.3},${baseline} ${w*0.5},${baseline - rise * 0.6} ${w},${baseline - rise}`;
-    }, [notesThisWeek]);
+  // Metrics strip — computed outside any nested component to avoid hook instability
+  const growthSparkPath = (() => {
+    const w = 56, baseline = 15;
+    if (notesThisWeek === 0) return `M0,${baseline} L${w},${baseline}`;
+    const rise = Math.min(notesThisWeek * 2.5, 13);
+    return `M0,${baseline} C${w * 0.3},${baseline} ${w * 0.5},${baseline - rise * 0.6} ${w},${baseline - rise}`;
+  })();
 
+  function MetricsStrip() {
     const items = [
-      { label: "Total Notes",      value: allNotes.length || "0", sub: SUBJECTS.length + " subjects", subColor: "var(--ink-3)" },
+      { label: "Total Notes",      value: allNotes.length || "0",
+        sub: SUBJECTS.length + " subjects", subColor: "var(--ink-3)" },
       { label: "Active Subject",   value: activeSubject ? activeSubject.short : "—",
         sub: activeSubject ? (subjectNoteCounts[activeSubject.id] || 0) + " notes" : "No notes yet",
-        subColor: activeSubject ? activeSubject.color : "var(--ink-3)", accent: activeSubject },
+        subColor: "var(--ink-3)" },
       { label: "Last Edited",      value: lastEdited ? lastEdited.title.split(" ").slice(0, 2).join(" ") : "—",
         sub: lastEdited ? lastEdited.when : "No notes yet", subColor: "var(--ink-3)" },
       { label: "Knowledge Growth", value: notesThisWeek > 0 ? "+" + notesThisWeek : "0",
@@ -3181,20 +3180,19 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
     ];
     return (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 16 }}>
-        {items.map((s, i) => (
+        {items.map((item, i) => (
           <div key={i} style={{
             background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: 8, padding: "13px 15px",
-            borderLeft: s.accent && typeof s.accent === "object" ? "3px solid " + s.accent.color : undefined,
           }}>
-            <div style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-3)", marginBottom: 7 }}>{s.label}</div>
+            <div style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-3)", marginBottom: 7 }}>{item.label}</div>
             <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 20, lineHeight: 1, color: "var(--ink)", marginBottom: 5,
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.value}</div>
-            {s.spark ? (
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.value}</div>
+            {item.spark && (
               <svg width="56" height="18" style={{ display: "block", marginBottom: 4, overflow: "visible" }}>
-                <path d={sparkPts} fill="none" stroke="var(--ink-3)" strokeWidth="1.5" strokeLinecap="round" opacity="0.45" />
+                <path d={growthSparkPath} fill="none" stroke="var(--ink-3)" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.5" />
               </svg>
-            ) : null}
-            <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: s.subColor }}>{s.sub}</div>
+            )}
+            <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: item.subColor }}>{item.sub}</div>
           </div>
         ))}
       </div>
@@ -3430,8 +3428,10 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 2 }}>
             <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 13, color: "var(--ink-3)", lineHeight: 1.3 }}>No notes yet.</div>
-            <button onClick={e => { e.stopPropagation(); newNote(); }} className="sn-btn ghost"
-              style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, alignSelf: "flex-start", padding: "4px 10px" }}>+ Create note</button>
+            <button onClick={e => { e.stopPropagation(); newNote(); }}
+              style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, alignSelf: "flex-start",
+                padding: "4px 10px", borderRadius: 4, background: "transparent",
+                border: "1px solid var(--hairline)", color: "var(--ink-2)", cursor: "pointer" }}>+ Create note</button>
           </div>
         )}
       </div>
@@ -3551,19 +3551,12 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
   const subjectsEmpty = SUBJECTS.filter(s => (subjectNoteCounts[s.id] || 0) === 0 && notesForSubject(s.id).length === 0 && store.notesFor(s.id).length === 0);
 
   // ── Render ───────────────────────────────────────────────────────────────────
-  const eyebrow = allNotes.length === 0
-    ? SUBJECTS.length + " subjects · no notes yet"
-    : allNotes.length + " notes · " + SUBJECTS.length + " subjects" +
-      (lastEdited ? " · last edited " + lastEdited.when : "") +
-      (notesThisWeek > 0 ? " · +" + notesThisWeek + " this week" : "");
-
   return (
     <>
       <PageHeader
-        eyebrow={eyebrow}
-        title="All your"
-        italic="notes."
-        meta="Your personal knowledge base — search, browse, and grow."
+        eyebrow="Notes"
+        italic="Notes."
+        meta="Your personal knowledge base."
         actions={<>
           <button className="sn-btn ghost" onClick={newNote}>+ New note</button>
         </>}
