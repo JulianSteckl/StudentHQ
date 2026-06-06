@@ -83,8 +83,21 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
   };
   const dueFor = (id) => Math.abs(id.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % 9;
 
+  // Make the shell's scrollable container a flex column so percentage heights resolve correctly
+  React.useEffect(() => {
+    const el = document.querySelector(".sn-content");
+    if (!el) return;
+    const prev = { display: el.style.display, flexDirection: el.style.flexDirection };
+    el.style.display = "flex";
+    el.style.flexDirection = "column";
+    return () => {
+      el.style.display = prev.display;
+      el.style.flexDirection = prev.flexDirection;
+    };
+  }, []);
+
   return (
-    <div style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
       <SubjectTodayWidget subject={s} onOpenNotes={onOpenNotes} onOpenQuiz={onOpenQuiz} />
 
       {/* Page header */}
@@ -166,7 +179,7 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
       </div>
 
       {/* 2-col body */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 20, flex: 1 }}>
         {/* Left column */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
