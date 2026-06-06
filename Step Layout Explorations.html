@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Step Layouts — Explorations</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #18181a; --bg-2: #212123; --surface: #2b2b2d;
+    --ink: #e6e6ea; --ink-2: #9898a4; --ink-3: #585862;
+    --hairline: #2e2e34; --rule: #3a3a3e;
+    --accent: #a4a8b4; --accent-ink: #c4c8d4; --accent-soft: #262630;
+    --f-display: "Source Serif 4", Georgia, serif;
+    --f-ui: "Geist", -apple-system, sans-serif;
+    --f-mono: "Geist Mono", ui-monospace, monospace;
+  }
+  html, body { margin: 0; background: #0e0e10; font-family: var(--f-ui); }
+  button { font-family: inherit; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="step-variants.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+  const { StepCurrent, StepFrameNumerals, StepOpenBook, StepLivePreview, StepIndexSidebar, StepCombined } = window;
+  const W = 1240, H = 800;
+
+  function App() {
+    return (
+      <DesignCanvas>
+        <DCSection id="current" title="Current" subtitle="Floating card — lots of empty space">
+          <DCArtboard id="current" label="0 · Current (live)" width={W} height={H}>
+            <StepCurrent />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="ideas" title="Directions" subtitle="Ideas for filling the space. Click any to focus fullscreen.">
+          <DCArtboard id="framenumerals" label="A · Frame + numerals" width={W} height={H}>
+            <StepFrameNumerals />
+          </DCArtboard>
+          <DCArtboard id="openbook" label="B · Open-book" width={W} height={H}>
+            <StepOpenBook />
+          </DCArtboard>
+          <DCArtboard id="livepreview" label="C · Live preview" width={W} height={H}>
+            <StepLivePreview />
+          </DCArtboard>
+          <DCArtboard id="indexsidebar" label="D · Index sidebar" width={W} height={H}>
+            <StepIndexSidebar />
+          </DCArtboard>
+          <DCArtboard id="combined" label="E · C + D Combined" width={W} height={H}>
+            <StepCombined />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

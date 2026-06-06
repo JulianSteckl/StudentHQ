@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Grades — Design Explorations v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400;1,8..60,600&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: #1a1611; }
+  #root { height: 100%; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+/* global DesignCanvas, DCSection, DCArtboard */
+
+// ── Tokens: warm paper (app default)
+const W = {
+  bg: "#faf7f1", bg2: "#f3eee2", surface: "#ffffff",
+  ink: "#1a1611", ink2: "#5b5346", ink3: "#9a9082",
+  hairline: "#e7e0d2", rule: "#d8cfbe",
+  accent: "#a07830", accentSoft: "#f0e8d5",
+  done: "#6b8e5a", doneSoft: "#dce6cf",
+  info: "#5a7a99", ochre: "#b58a3b", danger: "#b3543b",
+  sidebar: "#e8e0d0", sidebarB: "#d4c8b4",
+};
+
+// ── Tokens: dark slate
+const D = {
+  bg: "#16161a", bg2: "#1e1e24", surface: "#242429",
+  ink: "#e8e8ee", ink2: "#9898a8", ink3: "#54545e",
+  hairline: "#2a2a32", rule: "#32323c",
+  accent: "#a4a8b4", accentSoft: "#22222c",
+  done: "#5fa870", doneSoft: "#1a2e20",
+  info: "#5a85c0", ochre: "#c09040", danger: "#c85040",
+  sidebar: "#111116", sidebarB: "#22222c",
+};
+
+const serif = '"Source Serif 4", Georgia, serif';
+const sans  = '"Geist", -apple-system, sans-serif';
+const mono  = '"Geist Mono", ui-monospace, monospace';
+
+// ── Shared subject data
+const SUBJECTS = [
+  { id:"ap-lit",    name:"AP English Lit",  short:"AP Lit",  color:"#c8694a", avg:0.94, entries:4 },
+  { id:"ap-bio",    name:"AP Biology",      short:"Bio",     color:"#6b8e5a", avg:0.87, entries:5 },
+  { id:"alg2",      name:"Algebra II",      short:"Alg II",  color:"#5a7a99", avg:0.91, entries:6 },
+  { id:"us-hist",   name:"U.S. History",    short:"US Hist", color:"#b58a3b", avg:0.82, entries:3 },
+  { id:"spanish-3", name:"Spanish III",     short:"Esp 3",   color:"#7a4e6e", avg:0.89, entries:4 },
+  { id:"chem",      name:"Chemistry",       short:"Chem",    color:"#3f7d8a", avg:0.78, entries:7 },
+];
+
+const SCORES = {
+  "ap-lit":    [94, 97, 91, 95],
+  "ap-bio":    [84, 90, 86, 88, 87],
+  "alg2":      [93, 89, 91, 94, 90, 90],
+  "us-hist":   [85, 80, 81],
+  "spanish-3": [92, 87, 88, 90],
+  "chem":      [76, 80, 78, 77, 79, 78, 76],
+};
+
+function toLetter(p) {
+  if (p >= 0.97) return "A+"; if (p >= 0.93) return "A"; if (p >= 0.90) return "A−";
+  if (p >= 0.87) return "B+"; if (p >= 0.83) return "B"; if (p >= 0.80) return "B−";
+  if (p >= 0.77) return "C+"; if (p >= 0.73) return "C"; if (p >= 0.70) return "C−";
+  return "D";
+}
+function toGPA(p) {
+  if (p >= 0.93) return 4.0; if (p >= 0.90) return 3.7; if (p >= 0.87) return 3.3;
+  if (p >= 0.83) return 3.0; if (p >= 0.80) return 2.7; if (p >= 0.77) return 2.3;
+  if (p >= 0.73) return 2.0; if (p >= 0.70) return 1.7; return 0.7;
+}
+function gradeColor(p, t) {
+  if (p >= 0.90) return t.done; if (p >= 0.80) return t.info;
+  if (p >= 0.70) return t.ochre; return t.danger;
+}
+function gpaToLetter(g) {
+  if (g >= 3.85) return "A"; if (g >= 3.55) return "A−";
+  if (g >= 3.15) return "B+"; if (g >= 2.85) return "B"; if (g >= 2.55) return "B−";
+  if (g >= 2.15) return "C+"; if (g >= 1.85) return "C"; return "D";
+}
+
+const gpa   = SUBJECTS.reduce((s, sb) => s + toGPA(sb.avg), 0) / SUBJECTS.length;
+const best  = SUBJECTS.reduce((a, b) => a.avg >= b.avg ? a : b);
+const worst = SUBJECTS.reduce((a, b) => a.avg <= b.avg ? a : b);
+
+// ── Arc SVG primitive
+function Arc({ size, r, pct, color, stroke = 9, trackColor }) {
+  const circ = 2 * Math.PI * r;
+  const sweep = circ * 0.75;
+  const cx = size / 2, cy = size / 2;
+  return (
+    <svg width={size} height={size} style={{ transform: "rotate(135deg)", display: "block" }}>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={trackColor || "rgba(128,128,128,0.15)"} strokeWidth={stroke}
+        strokeDasharray={`${sweep} ${circ - sweep}`} strokeLinecap="round" />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={stroke}
+        strokeDasharray={`${sweep * pct} ${circ - sweep * pct}`} strokeLinecap="round"
+        style={{ transition: "stroke-dasharray 0.7s cubic-bezier(.4,0,.2,1)" }} />
+    </svg>
+  );
+}
+
+// ── Shared sidebar + shell (dark version)
+function DarkShell({ children }) {
+  const t = D;
+  const navItems = [
+    { icon: "⊞", label: "Dashboard" }, { icon: "✎", label: "Homework" },
+    { icon: "❑", label: "Subjects" },  { icon: "◎", label: "Quizzes" },
+    { icon: "♪", label: "Notes" },     { icon: "▣", label: "Flashcards" },
+    { icon: "◷", label: "Schedule" },  { icon: "◈", label: "Grades", active: true },
+  ];
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "210px 1fr", height: "100%", fontFamily: sans, background: t.bg, fontSize: 14, color: t.ink }}>
+      <div style={{ background: t.sidebar, borderRight: `1px solid ${t.sidebarB}`, display: "flex", flexDirection: "column", padding: "20px 14px", gap: 2 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 7, marginBottom: 22, padding: "0 4px" }}>
+          <span style={{ fontFamily: serif, fontStyle: "italic", fontSize: 20, color: t.accent }}>✦</span>
+          <span style={{ fontFamily: serif, fontSize: 16, color: t.ink }}>Notebook</span>
+        </div>
+        {navItems.map((n) => (
+          <div key={n.label} style={{
+            display: "flex", alignItems: "center", gap: 10, padding: "7px 8px", borderRadius: 4,
+            fontSize: 13, cursor: "pointer",
+            background: n.active ? t.accent + "22" : "transparent",
+            color: n.active ? t.accent : t.ink2,
+            borderLeft: n.active ? `2px solid ${t.accent}` : "2px solid transparent",
+          }}>
+            <span style={{ fontSize: 11, opacity: n.active ? 1 : 0.5 }}>{n.icon}</span>
+            {n.label}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 26px", borderBottom: `1px solid ${t.hairline}`, background: t.bg }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, maxWidth: 280, background: t.surface, border: `1px solid ${t.hairline}`, borderRadius: 4, padding: "6px 11px" }}>
+            <span style={{ color: t.ink3, fontSize: 13 }}>⌕</span>
+            <span style={{ fontFamily: mono, fontSize: 11.5, color: t.ink3 }}>Search…</span>
+            <span style={{ fontFamily: mono, fontSize: 9.5, color: t.ink3, marginLeft: "auto", border: `1px solid ${t.hairline}`, borderRadius: 3, padding: "0 5px" }}>⌘K</span>
+          </div>
+          <div style={{ flex: 1 }} />
+          <div style={{ width: 27, height: 27, borderRadius: "50%", background: t.surface, border: `1px solid ${t.hairline}`, display: "grid", placeItems: "center", fontFamily: serif, fontSize: 13 }}>J</div>
+        </div>
+        <div style={{ flex: 1, overflow: "auto", padding: "24px 26px 40px" }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Warm shell (for variant F)
+function WarmShell({ children }) {
+  const t = W;
+  const navItems = [
+    { icon: "⊞", label: "Dashboard" }, { icon: "✎", label: "Homework" },
+    { icon: "❑", label: "Subjects" },  { icon: "◎", label: "Quizzes" },
+    { icon: "♪", label: "Notes" },     { icon: "▣", label: "Flashcards" },
+    { icon: "◷", label: "Schedule" },  { icon: "◈", label: "Grades", active: true },
+  ];
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "210px 1fr", height: "100%", fontFamily: sans, background: t.bg, fontSize: 14, color: t.ink }}>
+      <div style={{ background: t.sidebar, borderRight: `1px solid ${t.sidebarB}`, display: "flex", flexDirection: "column", padding: "20px 14px", gap: 2 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 7, marginBottom: 22, padding: "0 4px" }}>
+          <span style={{ fontFamily: serif, fontStyle: "italic", fontSize: 20, color: t.accent }}>✦</span>
+          <span style={{ fontFamily: serif, fontSize: 16, color: t.ink }}>Notebook</span>
+        </div>
+        {navItems.map((n) => (
+          <div key={n.label} style={{
+            display: "flex", alignItems: "center", gap: 10, padding: "7px 8px", borderRadius: 4,
+            fontSize: 13.5, cursor: "pointer",
+            background: n.active ? t.ink : "transparent",
+            color: n.active ? t.bg : t.ink,
+          }}>
+            <span style={{ opacity: n.active ? 1 : 0.5, fontSize: 11 }}>{n.icon}</span>
+            {n.label}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 28px", borderBottom: `1px solid ${t.hairline}`, background: t.bg }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, maxWidth: 300, background: t.surface, border: `1px solid ${t.hairline}`, borderRadius: 4, padding: "7px 12px" }}>
+            <span style={{ color: t.ink3, fontSize: 13 }}>⌕</span>
+            <span style={{ fontFamily: mono, fontSize: 12, color: t.ink3 }}>Search…</span>
+          </div>
+          <div style={{ flex: 1 }} />
+          <div style={{ width: 28, height: 28, borderRadius: "50%", background: t.hairline, display: "grid", placeItems: "center", fontFamily: serif, fontSize: 14 }}>J</div>
+        </div>
+        <div style={{ flex: 1, overflow: "auto", padding: "26px 28px 40px" }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════
+// VARIANT D — "Dark Room"
+// Dark theme. Subjects as full-width rows with a large
+// glyph letter grade, individual score sparkline, and
+// a trend arrow. The arc GPA floats in the top-right of
+// the header as a single dramatic gauge.
+// ════════════════════════════════════════════════════════
+function VariantD() {
+  const t = D;
+  const gcFn = (p) => gradeColor(p, t);
+  const gpaGc = gpa >= 3.5 ? t.done : gpa >= 3.0 ? t.info : gpa >= 2.0 ? t.ochre : t.danger;
+
+  return (
+    <DarkShell>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+        <div>
+          <div style={{ fontFamily: mono, fontSize: 10, color: t.ink3, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 8 }}>
+            Spring term · Week 18 of 36
+          </div>
+          <h1 style={{ fontFamily: serif, fontSize: 36, fontWeight: 400, margin: "0 0 6px", lineHeight: 1, color: t.ink }}>
+            Grades, <em style={{ fontStyle: "italic", color: t.accent }}>this term.</em>
+          </h1>
+          <div style={{ fontFamily: mono, fontSize: 11.5, color: t.ink3 }}>
+            GPA {gpa.toFixed(2)} · {SUBJECTS.length} subjects · unweighted
+          </div>
+        </div>
+
+        {/* Arc GPA top-right */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+          <div style={{ position: "relative", width: 120, height: 120 }}>
+            <Arc size={120} r={48} pct={gpa / 4} color={gpaGc} stroke={8} trackColor={t.hairline} />
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ fontFamily: serif, fontSize: 30, lineHeight: 1, color: gpaGc, letterSpacing: "-0.02em" }}>{gpa.toFixed(2)}</div>
+              <div style={{ fontFamily: mono, fontSize: 9, color: t.ink3, marginTop: 3 }}>/ 4.00</div>
+            </div>
+          </div>
+          <div style={{ fontFamily: serif, fontStyle: "italic", fontSize: 18, color: gpaGc }}>{gpaToLetter(gpa)}</div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+        <div style={{ fontFamily: mono, fontSize: 9.5, color: t.ink3, textTransform: "uppercase", letterSpacing: "0.13em", whiteSpace: "nowrap" }}>6 subjects</div>
+        <div style={{ flex: 1, height: 1, background: t.hairline }} />
+        <button style={{ fontFamily: mono, fontSize: 10.5, padding: "5px 12px", borderRadius: 4, border: `1px solid ${t.hairline}`, background: "transparent", color: t.ink3, cursor: "pointer" }}>Export CSV</button>
+      </div>
+
+      {/* Subject rows */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        {SUBJECTS.map((s, i) => {
+          const gc = gcFn(s.avg);
+          const scores = SCORES[s.id] || [];
+          const trend = scores.length > 1 ? scores[scores.length - 1] - scores[0] : 0;
+          const trendArrow = trend > 2 ? "↑" : trend < -2 ? "↓" : "→";
+          const trendColor = trend > 2 ? t.done : trend < -2 ? t.danger : t.ink3;
+          return (
+            <div key={s.id} style={{
+              display: "grid", gridTemplateColumns: "4px 1fr auto auto auto",
+              alignItems: "center", gap: 18,
+              padding: "16px 18px",
+              background: i % 2 === 0 ? t.surface : t.bg2,
+              borderRadius: 6,
+            }}>
+              <div style={{ width: 4, height: 36, borderRadius: 2, background: s.color }} />
+
+              {/* Name + sparkline */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                  <span style={{ fontFamily: serif, fontSize: 16, color: t.ink }}>{s.name}</span>
+                  <span style={{ fontFamily: mono, fontSize: 11, color: trendColor }}>{trendArrow} {Math.abs(trend).toFixed(0)}pts</span>
+                </div>
+                {/* Score dots — mini sparkline */}
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 20 }}>
+                  {scores.map((sc, j) => {
+                    const h = Math.round(((sc - 70) / 30) * 16) + 4;
+                    return (
+                      <div key={j} style={{ width: 10, height: Math.max(h, 3), borderRadius: 2, background: gc, opacity: j === scores.length - 1 ? 1 : 0.35 + (j / scores.length) * 0.5 }} />
+                    );
+                  })}
+                  <span style={{ fontFamily: mono, fontSize: 9.5, color: t.ink3, marginLeft: 4, alignSelf: "center" }}>{s.entries} scores</span>
+                </div>
+              </div>
+
+              {/* Grade bar */}
+              <div style={{ width: 140 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontFamily: mono, fontSize: 10, color: t.ink3, marginBottom: 5 }}>
+                  <span>{Math.round(s.avg * 100)}%</span>
+                  <span>100</span>
+                </div>
+                <div style={{ height: 5, background: t.hairline, borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${s.avg * 100}%`, background: gc, borderRadius: 3 }} />
+                </div>
+              </div>
+
+              {/* Big letter grade */}
+              <div style={{ fontFamily: serif, fontStyle: "italic", fontSize: 42, lineHeight: 1, color: gc, minWidth: 50, textAlign: "right" }}>{toLetter(s.avg)}</div>
+
+              {/* + button */}
+              <button style={{ width: 28, height: 28, borderRadius: 5, border: `1px solid ${t.hairline}`, background: t.bg2, color: t.ink3, cursor: "pointer", fontSize: 17, display: "grid", placeItems: "center", fontFamily: sans }}>+</button>
+            </div>
+          );
+        })}
+      </div>
+    </DarkShell>
+  );
+}
+
+// ════════════════════════════════════════════════════════
+// VARIANT E — "Gauge Grid"
+// Dark theme. Each subject gets its own arc gauge card —
+// 6 cards in a 3×2 grid. The GPA arc is centered at top,
+// large and prominent. Feels like an instrumentation panel.
+// ════════════════════════════════════════════════════════
+function VariantE() {
+  const t = D;
+  const gcFn = (p) => gradeColor(p, t);
+  const gpaGc = gpa >= 3.5 ? t.done : gpa >= 3.0 ? t.info : gpa >= 2.0 ? t.ochre : t.danger;
+
+  return (
+    <DarkShell>
+      {/* Page title */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontFamily: mono, fontSize: 10, color: t.ink3, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 6 }}>Spring term · Week 18</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <h1 style={{ fontFamily: serif, fontSize: 34, fontWeight: 400, margin: 0, color: t.ink }}>
+            Grades, <em style={{ color: t.accent }}>this term.</em>
+          </h1>
+          <button style={{ fontFamily: mono, fontSize: 10.5, padding: "6px 13px", borderRadius: 4, border: `1px solid ${t.hairline}`, background: "transparent", color: t.ink3, cursor: "pointer" }}>Export CSV</button>
+        </div>
+      </div>
+
+      {/* Hero GPA gauge — centered */}
+      <div style={{
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        padding: "28px 0 24px",
+        background: t.surface, border: `1px solid ${t.hairline}`, borderRadius: 10,
+        marginBottom: 16,
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Faint grid lines behind */}
+        <svg width="100%" height="100%" style={{ position: "absolute", inset: 0, opacity: 0.04 }}>
+          {[20, 40, 60, 80].map(p => (
+            <line key={p} x1={`${p}%`} y1="0" x2={`${p}%`} y2="100%" stroke={t.ink} strokeWidth="1" />
+          ))}
+        </svg>
+
+        <div style={{ fontFamily: mono, fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.15em", color: t.ink3, marginBottom: 16, position: "relative" }}>Cumulative GPA</div>
+
+        <div style={{ position: "relative", width: 190, height: 190 }}>
+          <Arc size={190} r={78} pct={gpa / 4} color={gpaGc} stroke={12} trackColor={t.hairline} />
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ fontFamily: serif, fontSize: 58, lineHeight: 1, letterSpacing: "-0.03em", color: gpaGc }}>{gpa.toFixed(2)}</div>
+            <div style={{ fontFamily: serif, fontStyle: "italic", fontSize: 20, color: gpaGc, lineHeight: 1, marginTop: 6 }}>{gpaToLetter(gpa)}</div>
+            <div style={{ fontFamily: mono, fontSize: 9.5, color: t.ink3, marginTop: 6 }}>/ 4.00 · unweighted</div>
+          </div>
+        </div>
+
+        {/* Flanking stats */}
+        <div style={{ display: "flex", gap: 48, marginTop: 18, position: "relative" }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontFamily: mono, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.12em", color: t.ink3, marginBottom: 4 }}>Best</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 6, height: 6, borderRadius: 1, background: best.color, display: "inline-block" }} />
+              <span style={{ fontFamily: serif, fontSize: 14 }}>{best.short}</span>
+            </div>
+            <div style={{ fontFamily: mono, fontSize: 11, color: t.done, marginTop: 3 }}>{toLetter(best.avg)}</div>
+          </div>
+          <div style={{ width: 1, background: t.hairline }} />
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontFamily: mono, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.12em", color: t.ink3, marginBottom: 4 }}>Focus on</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 6, height: 6, borderRadius: 1, background: worst.color, display: "inline-block" }} />
+              <span style={{ fontFamily: serif, fontSize: 14 }}>{worst.short}</span>
+            </div>
+            <div style={{ fontFamily: mono, fontSize: 11, color: t.ochre, marginTop: 3 }}>{toLetter(worst.avg)}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3×2 subject gauge grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+        {SUBJECTS.map((s) => {
+          const gc = gcFn(s.avg);
+          const pct = s.avg;
+          return (
+            <div key={s.id} style={{
+              background: t.surface, border: `1px solid ${t.hairline}`, borderRadius: 8,
+              padding: "18px 16px 16px",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+              position: "relative", overflow: "hidden",
+            }}>
+              {/* Top color accent */}
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: s.color }} />
+
+              <div style={{ fontFamily: mono, fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.12em", color: t.ink3 }}>{s.short}</div>
+
+              {/* Mini arc */}
+              <div style={{ position: "relative", width: 90, height: 90 }}>
+                <Arc size={90} r={36} pct={pct} color={gc} stroke={7} trackColor={t.hairline} />
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ fontFamily: serif, fontStyle: "italic", fontSize: 26, lineHeight: 1, color: gc }}>{toLetter(s.avg)}</div>
+                </div>
+              </div>
+
+              <div style={{ fontFamily: serif, fontSize: 14.5, lineHeight: 1.2, textAlign: "center", color: t.ink }}>{s.name}</div>
+
+              <div style={{ display: "flex", gap: 14, fontFamily: mono, fontSize: 10, color: t.ink3 }}>
+                <span style={{ color: gc }}>{Math.round(s.avg * 100)}%</span>
+                <span>{s.entries} scores</span>
+              </div>
+
+              <button style={{ width: "100%", padding: "5px 0", borderRadius: 4, border: `1px solid ${t.hairline}`, background: "transparent", color: t.ink3, cursor: "pointer", fontFamily: mono, fontSize: 10.5 }}>+ Add score</button>
+            </div>
+          );
+        })}
+      </div>
+    </DarkShell>
+  );
+}
+
+// ════════════════════════════════════════════════════════
+// VARIANT F — "Broadsheet"
+// Warm paper theme. The GPA number is enormous — 110px
+// — dominating the top. Arc is drawn behind it as a thin
+// decorative halo. Below: a compact subject table using
+// a hatched progress bar pattern. Feels like an editorial
+// report you'd pin to a corkboard.
+// ════════════════════════════════════════════════════════
+function HatchBar({ pct, color, id }) {
+  const patId = `hatch-${id}`;
+  return (
+    <svg width="100%" height="7" style={{ display: "block" }}>
+      <defs>
+        <pattern id={patId} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="5" stroke={color} strokeWidth="2" strokeOpacity="0.55" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="7" rx="2" fill={W.hairline} />
+      {pct > 0 && <rect width={`${pct}%`} height="7" rx="2" fill={`url(#${patId})`} />}
+      {pct > 2 && pct < 99 && <rect x={`${pct}%`} y="0" width="2.5" height="7" fill={color} transform="translate(-1,0)" />}
+    </svg>
+  );
+}
+
+function VariantF() {
+  const t = W;
+  const gcFn = (p) => gradeColor(p, t);
+  const gpaGc = gpa >= 3.5 ? t.done : gpa >= 3.0 ? t.info : gpa >= 2.0 ? t.ochre : t.danger;
+  const arcR = 80, sz = 180;
+  const circ = 2 * Math.PI * arcR;
+  const sweep = circ * 0.75;
+
+  return (
+    <WarmShell>
+      {/* ── Broadsheet hero ── */}
+      <div style={{
+        background: t.surface, border: `1px solid ${t.hairline}`, borderRadius: 8,
+        marginBottom: 22, padding: "28px 36px",
+        boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 1px 3px rgba(30,20,8,0.09), 0 4px 14px rgba(30,20,8,0.055), 0 2px 0 0 ${t.rule}`,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+
+          {/* Giant GPA number with arc halo behind */}
+          <div style={{ position: "relative", width: 190, height: 190, flexShrink: 0 }}>
+            {/* Arc halo — thin, decorative */}
+            <div style={{ position: "absolute", inset: 5 }}>
+              <svg width={sz} height={sz} style={{ transform: "rotate(135deg)" }}>
+                <circle cx={90} cy={90} r={arcR} fill="none" stroke={t.hairline} strokeWidth="5"
+                  strokeDasharray={`${sweep} ${circ - sweep}`} strokeLinecap="round" />
+                <circle cx={90} cy={90} r={arcR} fill="none" stroke={gpaGc} strokeWidth="5"
+                  strokeDasharray={`${sweep * (gpa / 4)} ${circ - sweep * (gpa / 4)}`}
+                  strokeLinecap="round" />
+              </svg>
+            </div>
+            {/* Giant number centered over arc */}
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ fontFamily: serif, fontSize: 76, lineHeight: 1, letterSpacing: "-0.04em", color: t.ink, fontWeight: 300 }}>{gpa.toFixed(2)}</div>
+            </div>
+          </div>
+
+          {/* Right of number */}
+          <div style={{ marginLeft: 28 }}>
+            <div style={{ fontFamily: mono, fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.15em", color: t.ink3, marginBottom: 8 }}>Spring term · GPA</div>
+            <div style={{ fontFamily: serif, fontSize: 52, fontStyle: "italic", lineHeight: 1, color: gpaGc, letterSpacing: "-0.02em" }}>{gpaToLetter(gpa)}</div>
+            <div style={{ fontFamily: mono, fontSize: 11, color: t.ink3, marginTop: 10, lineHeight: 1.7 }}>
+              {SUBJECTS.length} subjects tracked<br />
+              Unweighted 4.0 scale
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{ width: 1, background: t.hairline, alignSelf: "stretch", margin: "0 32px" }} />
+
+          {/* Best + Worst */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {[{ label: "Highest", s: best, c: t.done }, { label: "Lowest", s: worst, c: t.ochre }].map(({ label, s, c }) => (
+              <div key={label}>
+                <div style={{ fontFamily: mono, fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.12em", color: t.ink3, marginBottom: 5 }}>{label}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: 1, background: s.color, display: "inline-block" }} />
+                  <span style={{ fontFamily: serif, fontSize: 17 }}>{s.name}</span>
+                </div>
+                <div style={{ fontFamily: mono, fontSize: 12, color: c, marginTop: 3 }}>{Math.round(s.avg * 100)}% · {toLetter(s.avg)}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ flex: 1 }} />
+
+          {/* Projected GPA helper */}
+          <div style={{ background: t.bg2, border: `1px solid ${t.hairline}`, borderRadius: 7, padding: "14px 18px", minWidth: 160, textAlign: "center" }}>
+            <div style={{ fontFamily: mono, fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.12em", color: t.ink3, marginBottom: 8 }}>To reach 3.75</div>
+            <div style={{ fontFamily: serif, fontSize: 14, color: t.ink2, lineHeight: 1.5 }}>
+              Avg <span style={{ color: t.ink, fontWeight: 500 }}>94%</span><br />
+              across all subjects
+            </div>
+            <div style={{ marginTop: 10, fontFamily: mono, fontSize: 10, color: t.info }}>Currently {gpa >= 3.75 ? "✓ on track" : `${(3.75 - gpa).toFixed(2)} away`}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Hatched subject table ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 13 }}>
+        <div style={{ fontFamily: mono, fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.14em", color: t.ink3, whiteSpace: "nowrap" }}>
+          6 subjects · click to expand · + to log a score
+        </div>
+        <div style={{ flex: 1, height: 1, background: t.hairline }} />
+      </div>
+
+      <div style={{ background: t.surface, border: `1px solid ${t.hairline}`, borderRadius: 8, overflow: "hidden",
+        boxShadow: `0 1px 0 rgba(255,255,255,0.7) inset, 0 1px 3px rgba(30,20,8,0.08)` }}>
+        {/* Header */}
+        <div style={{ display: "grid", gridTemplateColumns: "5px 1fr 200px 56px 58px 32px", gap: 14, padding: "9px 16px", background: t.bg2, borderBottom: `1px solid ${t.hairline}` }}>
+          {["", "Subject", "Progress", "%", "Grade", ""].map((h, i) => (
+            <div key={i} style={{ fontFamily: mono, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.13em", color: t.ink3, textAlign: i >= 3 ? "right" : "left" }}>{h}</div>
+          ))}
+        </div>
+
+        {SUBJECTS.map((s, i) => {
+          const gc = gcFn(s.avg);
+          const scores = SCORES[s.id] || [];
+          const trend = scores.length > 1 ? scores[scores.length - 1] - scores[0] : 0;
+          return (
+            <div key={s.id} style={{
+              display: "grid", gridTemplateColumns: "5px 1fr 200px 56px 58px 32px",
+              gap: 14, alignItems: "center", padding: "14px 16px",
+              borderBottom: i < SUBJECTS.length - 1 ? `1px solid ${t.hairline}` : "none",
+              background: i % 2 === 0 ? t.surface : t.bg,
+            }}>
+              <div style={{ width: 5, height: 28, borderRadius: 2, background: s.color }} />
+              <div>
+                <div style={{ fontFamily: serif, fontSize: 15.5, marginBottom: 2 }}>{s.name}</div>
+                <div style={{ fontFamily: mono, fontSize: 9.5, color: t.ink3 }}>
+                  {s.entries} scores
+                  {trend !== 0 && <span style={{ marginLeft: 8, color: trend > 0 ? t.done : t.danger }}>
+                    {trend > 0 ? "↑" : "↓"} {Math.abs(trend)}pts recent
+                  </span>}
+                </div>
+              </div>
+              <div style={{ paddingTop: 3 }}><HatchBar pct={s.avg * 100} color={gc} id={s.id} /></div>
+              <div style={{ fontFamily: mono, fontSize: 12, color: gc, textAlign: "right" }}>{Math.round(s.avg * 100)}%</div>
+              <div style={{ fontFamily: serif, fontStyle: "italic", fontSize: 32, lineHeight: 1, color: gc, textAlign: "right" }}>{toLetter(s.avg)}</div>
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <div style={{ width: 24, height: 24, borderRadius: 3, border: `1px solid ${t.hairline}`, background: t.bg2, display: "grid", placeItems: "center", fontSize: 15, color: t.ink3, cursor: "pointer" }}>+</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </WarmShell>
+  );
+}
+
+// ── Canvas
+const AW = 1200, AH = 820;
+
+function App() {
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+  return (
+    <DesignCanvas>
+      <DCSection id="v2" title="Grades — new directions" subtitle="Click any to fullscreen · drag to reorder">
+        <DCArtboard id="d" label="D · Dark Room — dark theme, sparklines, trend arrows" width={AW} height={AH}>
+          <VariantD />
+        </DCArtboard>
+        <DCArtboard id="e" label="E · Gauge Grid — dark, each subject gets its own arc" width={AW} height={AH}>
+          <VariantE />
+        </DCArtboard>
+        <DCArtboard id="f" label="F · Broadsheet — warm, giant GPA number, hatched bars" width={AW} height={AH}>
+          <VariantF />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

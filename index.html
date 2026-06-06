@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Julian's Notebook</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Notebook">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1611">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles.css" />
+
+<style>
+  html, body { background: var(--bg); height: 100%; margin: 0; }
+  #root { height: 100vh; }
+</style>
+</head>
+<body style="font-family: &quot;Times New Roman&quot;">
+<div id="root"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+  try {
+    firebase.initializeApp({
+      apiKey: "AIzaSyBpWumrjTMdKporWBdey2jgI2tYaoZnG_s",
+      authDomain: "julians-notebook.firebaseapp.com",
+      databaseURL: "https://julians-notebook-default-rtdb.firebaseio.com",
+      projectId: "julians-notebook",
+      storageBucket: "julians-notebook.firebasestorage.app",
+      messagingSenderId: "457994811490",
+      appId: "1:457994811490:web:84740161fa7ac289d3393b"
+    });
+    window.__fbAuth = firebase.auth();
+    window.__fbDb = firebase.database();
+    window.__fbGoogleProvider = firebase.auth.GoogleAuthProvider;
+  } catch(e) { console.warn("Firebase init failed:", e); }
+</script>
+
+<script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script>if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js"; }</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="onboarding.jsx?v=4"></script>
+<script type="text/babel" src="tweaks-panel.jsx?v=4"></script>
+<script type="text/babel" src="data.jsx?v=4"></script>
+<script type="text/babel" src="store.jsx?v=4"></script>
+<script type="text/babel" src="shell.jsx?v=8"></script>
+<script type="text/babel" src="dashboard.jsx?v=9"></script>
+<script type="text/babel" src="homework.jsx?v=10"></script>
+<script type="text/babel" src="subjects.jsx?v=4"></script>
+<script type="text/babel" src="quizzes.jsx?v=4"></script>
+<script type="text/babel" src="views.jsx?v=12"></script>
+<script type="text/babel" src="subject-overview.jsx?v=4"></script>
+<script type="text/babel" src="mobile.jsx?v=4"></script>
+<script type="text/babel" src="interactions.jsx?v=6"></script>
+
+<script type="text/babel" data-presets="env,react">
+/* global DashCombined, DashFocus, DashTimeline, ToolsContent, HomeworkContent, HomeworkDetailPage,
+          SubjectsContent, NoteContent, QuizzesContent, TakeQuiz, QuizDetailPage,
+          ScheduleContent, GradesContent, FlashcardsContent, NotesIndexContent,
+          Sidebar, Topbar, ApiKeyModal,
+          TweaksPanel, useTweaks, TweakSection, TweakRadio, TweakColor */
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent": "#a4a8b4",
+  "density": "default",
+  "homeVariant": "combined",
+  "subjectView": "cards",
+  "displayFont": "Source Serif 4",
+  "headerWidget": "none"
+}/*EDITMODE-END*/;
+
+function parseRoute() {
+  const h = (window.location.hash || "#/").replace(/^#\/?/, "");
+  if (!h) return { view: "dashboard" };
+  const parts = h.split("/");
+  const [first, ...rest] = parts;
+  if (first === "subject" && rest[0]) {
+    const sub = rest[1] || "overview";
+    return { view: "subject", id: rest[0], sub, noteId: rest[2] };
+  }
+  if (first === "quiz" && rest[0]) return { view: "quiz", quizType: rest[0], deckId: rest[1] };
+  if (first === "homework" && rest[0]) return { view: "homework-detail", id: rest[0] };
+  if (first === "quiz-detail" && rest[0]) return { view: "quiz-detail", id: rest[0] };
+  return { view: first };
+}
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [route, setRoute] = React.useState(parseRoute());
+  const [profile, setProfile] = React.useState(() => nbGetProfile());
+
+  const handleOnboardingComplete = (p) => {
+    setProfile(p);
+    // Push profile to Firebase immediately so other devices get it right away
+    if (window.nbSyncNow) window.nbSyncNow();
+    // Reload so SUBJECTS re-evaluates from localStorage
+    window.location.reload();
+  };
+  const [cmdkOpen, setCmdkOpen] = React.useState(false);
+  const [quickAdd, setQuickAdd] = React.useState(null); // null | "homework" | "note" | ...
+  const [aiOpen, setAiOpen] = React.useState(false);
+  const [scheduleEditorOpen, setScheduleEditorOpen] = React.useState(false);
+  const [manageSubjectsOpen, setManageSubjectsOpen] = React.useState(false);
+  const [apiKeyOpen, setApiKeyOpen] = React.useState(false);
+  const [hasApiKey, setHasApiKey] = React.useState(() => !!nbGetApiKey());
+  const [fbUser, setFbUser] = React.useState(null);
+  const [authReady, setAuthReady] = React.useState(!window.__fbAuth);
+
+  React.useEffect(() => {
+    if (!window.__fbAuth) { setAuthReady(true); return; }
+    const unsub = window.__fbAuth.onAuthStateChanged(user => {
+      setFbUser(user);
+      window.__fbCurrentUser = user;
+      window.dispatchEvent(new CustomEvent("fbUserChanged", { detail: user }));
+      if (window.nbSetFirebaseUser) window.nbSetFirebaseUser(user);
+      setAuthReady(true);
+    });
+    return unsub;
+  }, []);
+
+  // When Firebase loads a different profile (different subjects), reload so data.jsx picks it up
+  React.useEffect(() => {
+    const onLoaded = (e) => {
+      if (e.detail.profileChanged) {
+        // Give the store a moment to finish writing, then reload
+        setTimeout(() => window.location.reload(), 80);
+      }
+    };
+    window.addEventListener("nbFirebaseLoaded", onLoaded);
+    return () => window.removeEventListener("nbFirebaseLoaded", onLoaded);
+  }, []);
+
+  const [signInError, setSignInError] = React.useState("");
+  const handleSignIn = () => {
+    setSignInError("");
+    if (!window.__fbAuth || !window.__fbGoogleProvider) {
+      setSignInError("Auth not ready — reload the page and try again.");
+      return;
+    }
+    const provider = new window.__fbGoogleProvider();
+    window.__fbAuth.signInWithPopup(provider).catch(e => {
+      setSignInError(e.message || "Sign-in failed");
+    });
+  };
+  const handleSignOut = () => {
+    window.__fbAuth?.signOut();
+    localStorage.removeItem("nb-profile-v1");
+    window.location.reload();
+  };
+
+  React.useEffect(() => {
+    const onHash = () => setRoute(parseRoute());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+
+
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCmdkOpen((v) => !v);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n" && !e.shiftKey) {
+        e.preventDefault();
+        setQuickAdd("homework");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  React.useEffect(() => {
+    const onQuickAdd = (e) => setQuickAdd((e.detail && e.detail.type) || "homework");
+    const onPrint = () => window.print();
+    const onPlan = () => setQuickAdd("homework");
+    const onSchedule = () => setScheduleEditorOpen(true);
+    const onManageSubjects = () => setManageSubjectsOpen(true);
+    const onOpenApiKey = () => setApiKeyOpen(true);
+    const onApiKeyChanged = () => setHasApiKey(!!nbGetApiKey());
+    window.addEventListener("openQuickAdd", onQuickAdd);
+    window.addEventListener("printWeek", onPrint);
+    window.addEventListener("planTomorrow", onPlan);
+    window.addEventListener("openScheduleEditor", onSchedule);
+    window.addEventListener("openManageSubjects", onManageSubjects);
+    window.addEventListener("openApiKeyModal", onOpenApiKey);
+    window.addEventListener("apiKeyChanged", onApiKeyChanged);
+    return () => {
+      window.removeEventListener("openQuickAdd", onQuickAdd);
+      window.removeEventListener("printWeek", onPrint);
+      window.removeEventListener("planTomorrow", onPlan);
+      window.removeEventListener("openScheduleEditor", onSchedule);
+      window.removeEventListener("openManageSubjects", onManageSubjects);
+      window.removeEventListener("openApiKeyModal", onOpenApiKey);
+      window.removeEventListener("apiKeyChanged", onApiKeyChanged);
+    };
+  }, []);
+
+  const go = (key) => {
+    if (key.startsWith("subject:")) {
+      window.location.hash = "#/subject/" + key.slice(8);
+    } else if (key.startsWith("quiz/")) {
+      window.location.hash = "#/" + key;
+    } else if (key === "dashboard") {
+      window.location.hash = "#/";
+    } else {
+      window.location.hash = "#/" + key;
+    }
+  };
+
+  // Compute sidebar active key from current route
+  let sidebarActive = "dashboard";
+  if (route.view === "subject") sidebarActive = route.id;
+  else if (route.view === "homework") sidebarActive = "homework";
+  else if (route.view === "quizzes" || route.view === "quiz") sidebarActive = "quizzes";
+  else if (route.view === "notes") sidebarActive = "notes";
+  else if (route.view === "flashcards") sidebarActive = "cards";
+  else if (route.view === "schedule") sidebarActive = "schedule";
+  else if (route.view === "grades") sidebarActive = "grades";
+  else if (route.view === "tools") sidebarActive = "tools";
+  else if (route.view === "subjects") sidebarActive = "";
+
+  // Decide if content area needs special styling (note editor takes over the area)
+  const isNote = route.view === "subject" && route.sub === "notes";
+  const isQuiz = route.view === "quiz";
+
+  // Per-subject accent tint when viewing a subject
+  const subjectAccent = route.view === "subject" && route.id ? (subjectBy(route.id)?.color) : null;
+  const effectiveAccent = subjectAccent || tweaks.accent;
+
+  const accentStyle = `
+    :root {
+      --accent: ${effectiveAccent} !important;
+      --accent-soft: ${hexAlpha(effectiveAccent, 0.22)} !important;
+      --accent-ink: ${darken(effectiveAccent, 0.28)} !important;
+      --f-display: "${tweaks.displayFont}", Georgia, serif !important;
+    }
+  `;
+
+  // Get the note text for the AI helper (when in notes view)
+  const noteForAI = React.useMemo(() => {
+    if (!isNote) return { title: "", text: "", subject: "" };
+    const subj = subjectBy(route.id);
+    const notes = notesForSubject(route.id);
+    const active = (route.noteId && notes.find((n) => n.id === route.noteId)) || notes[0];
+    if (!active) return { title: "", text: "", subject: subj?.short || "" };
+    const text = (active.blocks || []).map((b) => b.text).join("\n");
+    return { title: active.title, text, subject: subj?.short || "" };
+  }, [isNote, route.id, route.noteId]);
+
+  if (!profile) {
+    return (
+      <>
+        <style>{accentStyle}</style>
+        <Onboarding onComplete={handleOnboardingComplete} />
+      </>
+    );
+  }
+
+  // Mobile layout for phones
+  if (window.innerWidth < 768) {
+    return (
+      <>
+        <style>{accentStyle}</style>
+        <MobileApp />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <style>{accentStyle}</style>
+      <div className={`sn-root density-${tweaks.density}`} style={{ height: "100%" }}>
+        <div className="sn-app">
+          <Sidebar active={sidebarActive} onNav={go} />
+          <main className="sn-main">
+            <Topbar
+              placeholder={
+                route.view === "subject" ? "Search in this subject…" :
+                route.view === "homework" ? "Search homework…" :
+                route.view === "notes" ? "Search all notes…" :
+                "Search notes, homework, quizzes…"
+              }
+              onSearchClick={() => setCmdkOpen(true)}
+              onPlusClick={() => setQuickAdd("homework")}
+              onSignOut={handleSignOut}
+              extras={
+                <>
+                  <PomodoroChip />
+                  <button
+                    className="sn-btn ghost"
+                    onClick={() => setApiKeyOpen(true)}
+                    title={hasApiKey ? "AI connected — click to manage key" : "Connect Claude AI"}
+                    style={{
+                      fontSize: 12, padding: "5px 10px",
+                      borderColor: hasApiKey ? "var(--accent)" : "var(--hairline)",
+                      color: hasApiKey ? "var(--accent)" : "var(--ink-3)",
+                      display: "flex", alignItems: "center", gap: 5,
+                    }}
+                  >
+                    <span style={{ fontFamily: "var(--f-display)", fontStyle: "italic" }}>✦</span>
+                    {hasApiKey ? "AI on" : "Connect AI"}
+                    {hasApiKey && <span style={{ width: 6, height: 6, borderRadius: 3, background: "var(--accent)", flexShrink: 0 }}></span>}
+                  </button>
+                  {isNote && (
+                    <button className="sn-btn" onClick={() => setAiOpen(true)} style={{ borderColor: "var(--accent)", color: "var(--accent-ink)", background: "var(--accent-soft)" }}>
+                      <span style={{ fontFamily: "var(--f-display)", fontStyle: "italic", marginRight: 2 }}>✦</span> AI helper
+                    </button>
+                  )}
+                  {authReady && !fbUser && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
+                      <button className="sn-btn" onClick={handleSignIn} style={{ fontSize: 12, padding: "5px 12px", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.86 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"/>
+                        </svg>
+                        Sign in with Google
+                      </button>
+                      {signInError && <div style={{ fontSize: 10.5, color: "var(--accent)", fontFamily: "var(--f-mono)", maxWidth: 220, textAlign: "right" }}>{signInError}</div>}
+                    </div>
+                  )}
+                </>
+              }
+            />
+            <div key={route.view + ":" + (route.id || "") + ":" + (route.sub || "")}
+              className="sn-content pg-route-enter"
+              style={
+                isNote ? { padding: 0, display: "flex" } :
+                isQuiz ? { padding: 0 } :
+                route.view === "homework-detail" ? { padding: 0, display: "flex", overflow: "hidden" } :
+                undefined
+              }>
+              <RouteView route={route} go={go} tweaks={tweaks} setTweak={setTweak} />
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {cmdkOpen && (
+        <CommandPalette
+          onClose={() => setCmdkOpen(false)}
+          onNav={go}
+          onOpenQuickAdd={(t) => setQuickAdd(t)}
+        />
+      )}
+      {quickAdd && (
+        <QuickAdd
+          initialType={quickAdd}
+          onClose={() => setQuickAdd(null)}
+        />
+      )}
+      {aiOpen && isNote && (
+        <AIHelper
+          noteTitle={noteForAI.title}
+          noteText={noteForAI.text}
+          subjectShort={noteForAI.subject}
+          onClose={() => setAiOpen(false)}
+        />
+      )}
+      {scheduleEditorOpen && (
+        <ScheduleEditor onClose={() => setScheduleEditorOpen(false)} />
+      )}
+      {manageSubjectsOpen && (
+        <ManageSubjectsModal onClose={() => setManageSubjectsOpen(false)} />
+      )}
+      {apiKeyOpen && (
+        <ApiKeyModal onClose={() => setApiKeyOpen(false)} />
+      )}
+
+      <ToastHost />
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Color">
+          <TweakColor
+            label="Accent"
+            value={tweaks.accent}
+            onChange={(v) => setTweak("accent", v)}
+            options={["#c8694a", "#3f7d8a", "#7a4e6e", "#6b8e5a"]}
+          />
+        </TweakSection>
+
+        <TweakSection label="Typography">
+          <TweakRadio
+            label="Display font"
+            value={tweaks.displayFont}
+            onChange={(v) => setTweak("displayFont", v)}
+            options={[
+              { value: "Source Serif 4", label: "Serif" },
+              { value: "Instrument Serif", label: "Editorial" },
+              { value: "Geist", label: "Sans" },
+            ]}
+          />
+        </TweakSection>
+
+        <TweakSection label="Layout">
+          <TweakRadio
+            label="Density"
+            value={tweaks.density}
+            onChange={(v) => setTweak("density", v)}
+            options={[
+              { value: "compact", label: "Compact" },
+              { value: "default", label: "Default" },
+              { value: "roomy", label: "Roomy" },
+            ]}
+          />
+          <TweakRadio
+            label="Subjects view"
+            value={tweaks.subjectView}
+            onChange={(v) => setTweak("subjectView", v)}
+            options={[
+              { value: "cards", label: "Cards" },
+              { value: "list", label: "List" },
+            ]}
+          />
+        </TweakSection>
+
+        <TweakSection label="Home screen">
+          <TweakRadio
+            label="Variant"
+            value={tweaks.homeVariant}
+            onChange={(v) => setTweak("homeVariant", v)}
+            options={[
+              { value: "combined", label: "All-in-one" },
+              { value: "focus", label: "Focus" },
+              { value: "timeline", label: "Timeline" },
+            ]}
+          />
+          <TweakRadio
+            label="Header widget"
+            value={tweaks.headerWidget}
+            onChange={(v) => setTweak("headerWidget", v)}
+            options={[
+              { value: "stats", label: "Stats" },
+              { value: "timeline", label: "Schedule" },
+              { value: "focus", label: "Focus" },
+              { value: "none", label: "Off" },
+            ]}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+function RouteView({ route, go, tweaks, setTweak }) {
+  switch (route.view) {
+    case "dashboard":
+    case "":
+      if (tweaks.homeVariant === "focus")    return <DashFocus view={tweaks.subjectView} />;
+      if (tweaks.homeVariant === "timeline") return <DashTimeline view={tweaks.subjectView} />;
+      return <DashCombined view={tweaks.subjectView} headerWidget={tweaks.headerWidget} />;
+    case "homework":
+      return <HomeworkContent />;
+    case "homework-detail":
+      return <HomeworkDetailPage hwId={route.id} />;
+    case "quizzes":
+      return <QuizzesContent onTakeQuiz={(t, deckId) => go("quiz/" + t + (deckId ? "/" + deckId : ""))} />;
+    case "quiz":
+      return <TakeQuiz type={route.quizType} deckId={route.deckId} onExit={() => go("quizzes")} />;
+    case "quiz-detail":
+      return <QuizDetailPage quizId={route.id} />;
+    case "notes":
+      return <NotesIndexContent
+        onOpenSubject={(id) => go("subject:" + id)}
+        onOpenNote={(id, noteId) => { window.location.hash = "#/subject/" + id + "/notes" + (noteId ? "/" + noteId : ""); }}
+      />;
+    case "subjects":
+      return <SubjectsContent
+        view={tweaks.subjectView}
+        onOpenSubject={(id) => go("subject:" + id)}
+        onChangeView={(v) => setTweak("subjectView", v)}
+      />;
+    case "subject":
+      if (route.sub === "notes") return <NoteContent subjectId={route.id} noteId={route.noteId} />;
+      return <SubjectOverviewContent
+        subjectId={route.id}
+        onOpenNotes={(id, noteId) => window.location.hash = "#/subject/" + id + "/notes" + (noteId ? "/" + noteId : "")}
+        onOpenQuiz={(t, deckId) => go("quiz/" + t + (deckId ? "/" + deckId : ""))}
+        onOpenHomework={() => go("homework")}
+      />;
+    case "tools":
+      return <ToolsContent />;
+    case "schedule":
+      return <ScheduleContent />;
+    case "grades":
+      return <GradesContent />;
+    case "flashcards":
+      return <FlashcardsContent onTakeQuiz={(t, deckId) => go("quiz/" + t + (deckId ? "/" + deckId : ""))} />;
+    default:
+      return <NotFound go={go} />;
+  }
+}
+
+function NotFound({ go }) {
+  return (
+    <div style={{ textAlign: "center", padding: "80px 0" }}>
+      <div style={{ fontFamily: "var(--f-display)", fontSize: 64, color: "var(--ink-3)" }}>404</div>
+      <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 22, color: "var(--ink-2)", marginTop: 8 }}>That page isn't in this notebook.</div>
+      <button className="sn-btn primary" style={{ marginTop: 24 }} onClick={() => go("dashboard")}>← Back to today</button>
+    </div>
+  );
+}
+
+// --- color helpers ---
+function hexAlpha(hex, a) {
+  const { r, g, b } = parseHex(hex);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function darken(hex, amt) {
+  let { r, g, b } = parseHex(hex);
+  r = Math.round(r * (1 - amt));
+  g = Math.round(g * (1 - amt));
+  b = Math.round(b * (1 - amt));
+  return `rgb(${r},${g},${b})`;
+}
+function parseHex(hex) {
+  const m = hex.replace("#", "");
+  return { r: parseInt(m.slice(0, 2), 16), g: parseInt(m.slice(2, 4), 16), b: parseInt(m.slice(4, 6), 16) };
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+
+</body>
+</html>
