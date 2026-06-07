@@ -139,77 +139,123 @@ function SubjectOverviewContent({ subjectId, onOpenNotes, onOpenQuiz, onOpenHome
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
       <SubjectTodayWidget subject={s} onOpenNotes={onOpenNotes} onOpenQuiz={onOpenQuiz} />
 
-      {/* Page header */}
-      <div className="pg-header" style={{ display: "flex", gap: 18, marginBottom: 24, alignItems: "flex-start", animationDelay: "0.05s" }}>
-        <div style={{ width: 8, alignSelf: "stretch", background: s.color, borderRadius: 2, minHeight: 90 }}></div>
-        <div style={{ flex: 1 }}>
-          <div className="mono" style={{ fontSize: 10.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
-            {s.short}{s.period ? ` · Period ${s.period}` : ""}{s.room && s.room !== "—" ? ` · Room ${s.room}` : ""}{s.teacher && s.teacher !== "—" ? ` · ${s.teacher}` : ""}
+      {/* Page header — subject identity with color presence */}
+      <div className="pg-header" style={{ display: "flex", gap: 0, marginBottom: 22, alignItems: "stretch", animationDelay: "0.05s",
+        background: `linear-gradient(135deg, ${s.color}12 0%, transparent 50%)`,
+        borderRadius: "var(--radius-lg)", padding: "20px 22px 20px",
+        border: `1px solid ${s.color}28`,
+        marginLeft: -4, marginRight: -4,
+      }}>
+        {/* Color identity bar */}
+        <div style={{ width: 5, alignSelf: "stretch", background: s.color, borderRadius: 3, minHeight: 80, flexShrink: 0, marginRight: 20, boxShadow: `0 0 16px ${s.color}50` }}></div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Subject glyph + meta */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <SubjectGlyph id={subjectId} size={13} color={s.color} />
+            <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.14em" }}>
+              {s.short}{s.period ? ` · Period ${s.period}` : ""}{s.room && s.room !== "—" ? ` · Rm ${s.room}` : ""}{s.teacher && s.teacher !== "—" ? ` · ${s.teacher}` : ""}
+            </div>
           </div>
-          <h1 className="serif" style={{ fontFamily: "var(--f-display)", fontSize: 44, lineHeight: 1.05, margin: "6px 0 6px", letterSpacing: "-0.015em" }}>
+          {/* Big subject name */}
+          <h1 className="serif" style={{ fontFamily: "var(--f-display)", fontSize: 40, lineHeight: 1.05, margin: "0 0 6px", letterSpacing: "-0.015em", color: "var(--ink)" }}>
             {s.name}
           </h1>
-          <div style={{ fontSize: 13.5, color: "var(--ink-2)" }}>
-            Unit 3 · Cellular Energetics · {s.notes} notes · {subjectHW.length} homework items · {s.quizzes} quizzes this term
+          <div style={{ fontSize: 13, color: "var(--ink-3)", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ color: "var(--ink-2)" }}>{s.notes} notes</span>
+            <span style={{ opacity: 0.35 }}>·</span>
+            <span style={{ color: "var(--ink-2)" }}>{subjectHW.length} assignments</span>
+            <span style={{ opacity: 0.35 }}>·</span>
+            <span style={{ color: "var(--ink-2)" }}>{s.quizzes} quizzes this term</span>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button className="sn-btn ghost" onClick={() => setClassInfoOpen(true)}>Class info</button>
-          <button className="sn-btn" onClick={() => onOpenNotes(subjectId)}>Open notes →</button>
+        {/* Actions */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, justifyContent: "center", flexShrink: 0 }}>
+          <button className="sn-btn ghost" onClick={() => setClassInfoOpen(true)} style={{ fontSize: 12 }}>Class info</button>
+          <button className="sn-btn" onClick={() => onOpenNotes(subjectId)} style={{ fontSize: 12 }}>Open notes →</button>
         </div>
       </div>
 
-      {/* Stat strip — each card staggers in */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr", gap: 14, marginBottom: 24 }}>
+      {/* Stat strip — hero grade card + 3 supporting stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: 12, marginBottom: 22 }}>
 
-        <div className="sn-card pg-stat" style={{ minHeight: 120, animationDelay: "0.1s" }}>
+        {/* HERO: Grade card */}
+        <div className="sn-card pg-stat stat-hero" style={{
+          minHeight: 116, animationDelay: "0.1s",
+          background: `linear-gradient(150deg, ${s.color}18 0%, var(--surface) 48%)`,
+          borderLeft: `3px solid ${s.color}`,
+        }}>
           <div className="sn-card-title"><span>Grade · this term</span></div>
-          {s.grade && s.grade !== "—"
-            ? <div style={{ fontFamily: "var(--f-display)", fontSize: 52, lineHeight: 1, color: "var(--ink)", marginBottom: 8 }}>{s.grade}</div>
-            : <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 18, lineHeight: 1, color: "var(--ink-3)", marginBottom: 8 }}>No grade yet</div>
-          }
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 6 }}>
+            {s.grade && s.grade !== "—"
+              ? <div style={{ fontFamily: "var(--f-display)", fontSize: 56, lineHeight: 1, color: s.color, letterSpacing: "-0.03em", textShadow: `0 0 28px ${s.color}40` }}>{s.grade}</div>
+              : <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 18, lineHeight: 1, color: "var(--ink-3)" }}>No grade yet</div>
+            }
+          </div>
           <SubjectSparkline color={s.color} />
-          <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 8 }}>
+          <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)", marginTop: 7 }}>
             <span style={{ color: "var(--done)" }}>↑ 2.4 pts</span> · since last report
           </div>
         </div>
 
-        <div className="sn-card pg-stat" style={{ minHeight: 120, animationDelay: "0.15s" }}>
+        {/* Open work */}
+        <div className="sn-card pg-stat" style={{ minHeight: 116, animationDelay: "0.14s" }}>
           <div className="sn-card-title"><span>Open work</span></div>
           {openHW.length === 0 ? (
             <>
-              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 30, lineHeight: 1, color: "var(--ink)", marginBottom: 6 }}>All clear</div>
-              <div className="mono" style={{ fontSize: 11, color: "var(--ink)", marginTop: 6 }}>nothing due</div>
+              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 26, lineHeight: 1, color: "var(--done)", marginBottom: 5 }}>All clear</div>
+              <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)", marginTop: 4 }}>nothing due</div>
             </>
           ) : (
             <>
-              <div style={{ fontFamily: "var(--f-display)", fontSize: 38, lineHeight: 1 }}>{openHW.length}</div>
-              <div className="mono" style={{ fontSize: 11, color: urgentCount > 0 ? "var(--accent)" : "var(--ink-3)", marginTop: 6 }}>{urgentCount} URGENT</div>
+              <div style={{ fontFamily: "var(--f-display)", fontSize: 44, lineHeight: 1, color: urgentCount > 0 ? "var(--danger)" : "var(--ink)" }}>{openHW.length}</div>
+              <div className="mono" style={{ fontSize: 10, color: urgentCount > 0 ? "var(--danger)" : "var(--ink-3)", marginTop: 5 }}>
+                {urgentCount > 0 ? `${urgentCount} URGENT` : "open items"}
+              </div>
             </>
           )}
         </div>
 
-        <div className="sn-card pg-stat" style={{ minHeight: 120, animationDelay: "0.2s" }}>
+        {/* Next class */}
+        <div className="sn-card pg-stat" style={{ minHeight: 116, animationDelay: "0.18s" }}>
           <div className="sn-card-title"><span>Next class</span></div>
-          <div style={{ fontFamily: "var(--f-display)", fontSize: 28, lineHeight: 1.05 }}>Wed</div>
-          <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>10:10 AM · ROOM {s.room.toUpperCase()}</div>
+          <div style={{ fontFamily: "var(--f-display)", fontSize: 32, lineHeight: 1.0, marginBottom: 5 }}>Wed</div>
+          <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }}>10:10 AM</div>
+          <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)", marginTop: 2 }}>RM {(s.room || "—").toUpperCase()}</div>
         </div>
 
-        <div className="sn-card pg-stat" style={{ minHeight: 120, animationDelay: "0.25s" }}>
-          <div className="sn-card-title"><span>Quiz confidence</span></div>
-          {subjectQuiz ? (
-            <>
-              <div style={{ fontFamily: "var(--f-display)", fontSize: 38, lineHeight: 1, color: "var(--ink)", marginBottom: 8 }}>{Math.round(subjectQuiz.confidence * 100)}%</div>
-              <ConfidenceMeter value={subjectQuiz.confidence} />
-              <div className="mono" style={{ fontSize: 10.5, color: "var(--ink-3)", marginTop: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {subjectQuiz.title.slice(0, 22)} · {subjectQuiz.when}
+        {/* Quiz confidence — readiness ring */}
+        <div className="sn-card pg-stat" style={{ minHeight: 116, animationDelay: "0.22s" }}>
+          <div className="sn-card-title"><span>Quiz readiness</span></div>
+          {subjectQuiz ? (() => {
+            const conf = Math.round(subjectQuiz.confidence * 100);
+            const rColor = subjectQuiz.confidence >= 0.7 ? "var(--done)" : subjectQuiz.confidence >= 0.5 ? "var(--ochre)" : "var(--danger)";
+            const r = 20, circ = 2 * Math.PI * r;
+            const dash = (subjectQuiz.confidence * circ).toFixed(1);
+            return (
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {/* SVG ring */}
+                <div style={{ position: "relative", flexShrink: 0 }}>
+                  <svg width="52" height="52" viewBox="0 0 52 52" style={{ transform: "rotate(-90deg)" }}>
+                    <circle cx="26" cy="26" r={r} fill="none" stroke="var(--hairline)" strokeWidth="4"/>
+                    <circle cx="26" cy="26" r={r} fill="none" stroke={rColor} strokeWidth="4"
+                      strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"/>
+                  </svg>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                    fontFamily: "var(--f-display)", fontSize: 13, color: rColor, fontWeight: 400, lineHeight: 1 }}>{conf}%</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11.5, fontWeight: 500, lineHeight: 1.25, color: "var(--ink)", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                    {subjectQuiz.title.length > 30 ? subjectQuiz.title.slice(0, 28) + "…" : subjectQuiz.title}
+                  </div>
+                  <div className="mono" style={{ fontSize: 9.5, color: "var(--ink-3)" }}>{subjectQuiz.when}</div>
+                </div>
               </div>
-            </>
-          ) : (
+            );
+          })() : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 2 }}>
-              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 15, color: "var(--ink-3)", lineHeight: 1.35 }}>No quiz on the horizon.</div>
+              <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 14, color: "var(--ink-3)", lineHeight: 1.35 }}>No quiz on the horizon.</div>
               <a onClick={() => window.dispatchEvent(new CustomEvent("openQuickAdd", { detail: { type: "quiz" } }))}
-                style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textDecoration: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)", textDecoration: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                 Schedule one →
               </a>
             </div>

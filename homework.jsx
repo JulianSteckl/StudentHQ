@@ -237,18 +237,31 @@ function HomeworkContent() {
       <div className="pg-section" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, marginBottom: 22, animationDelay: "0.15s" }}>
         {[
           { label: "Open Work",  numVal: openHW.length,   suffix: "", sub: "assignments",    isNum: true },
-          { label: "Urgent",     numVal: urgentHW.length, suffix: "", sub: "need attention", isNum: true,  accent: urgentHW.length > 0 ? "var(--danger)" : null },
+          { label: "Urgent",     numVal: urgentHW.length, suffix: "", sub: "need attention", isNum: true,  accent: urgentHW.length > 0 ? "var(--danger)" : null, accentBg: urgentHW.length > 0 },
           { label: "Due Today",  numVal: todayHW.length,  suffix: "", sub: "assignments",    isNum: true,  accent: todayHW.length > 0 ? "var(--accent)" : null },
           { label: "Est. Time",  numVal: null, textVal: hwFmtTime(totalMins), sub: "remaining",      isNum: false },
-          { label: "Completion", numVal: pct,  suffix: "%",               sub: `${doneHW.length} of ${allHW.length} done`, isNum: true },
+          { label: "Completion", numVal: pct,  suffix: "%",               sub: `${doneHW.length} of ${allHW.length} done`, isNum: true, accent: pct === 100 ? "var(--done)" : null },
         ].map((m, i) => (
           <div key={i}
             style={{
-              background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: "var(--radius)",
-              padding: "13px 14px", cursor: "default",
+              background: m.accentBg
+                ? "linear-gradient(135deg, rgba(255,80,80,0.08) 0%, var(--surface) 55%)"
+                : "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)",
+              border: "1px solid " + (m.accentBg ? "rgba(255,80,80,0.18)" : "rgba(255,255,255,0.07)"),
+              borderRadius: "var(--radius)", padding: "13px 14px", cursor: "default",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+              transition: "border-color 0.15s, box-shadow 0.15s, transform 0.15s",
             }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--rule)"; e.currentTarget.style.boxShadow = "0 2px 10px rgba(30,20,8,0.09)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--hairline)"; e.currentTarget.style.boxShadow = "none"; }}>
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = m.accent ? m.accent + "40" : "rgba(255,255,255,0.14)";
+              e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(124,122,255,0.06)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = m.accentBg ? "rgba(255,80,80,0.18)" : "rgba(255,255,255,0.07)";
+              e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
+              e.currentTarget.style.transform = "none";
+            }}>
             <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 7 }}>{m.label}</div>
             <div style={{ fontFamily: m.isNum ? "var(--f-display)" : "var(--f-mono)", fontSize: m.isNum ? 26 : 18, fontWeight: 400, lineHeight: 1, color: m.accent || "var(--ink)", letterSpacing: m.isNum ? "-0.02em" : "0" }}>
               {m.numVal != null
@@ -262,25 +275,36 @@ function HomeworkContent() {
 
       {/* ── TODAY'S FOCUS ── */}
       {priorities.length > 0 && (
-        <div className="pg-section" style={{
-          background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: "var(--radius-lg)",
-          padding: "18px 20px", marginBottom: 22, animationDelay: "0.25s",
+        <div className="sn-ai-panel pg-section" style={{
+          borderRadius: "var(--radius-lg)", padding: "18px 20px", marginBottom: 22, animationDelay: "0.25s",
         }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
-                <span style={{ color: "var(--accent)", fontSize: 11, opacity: 0.8 }}>✦</span>
-                <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)" }}>Today's Focus</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 24, height: 24, borderRadius: 6, background: "rgba(124,122,255,0.18)",
+                  fontSize: 10, color: "var(--accent)", flexShrink: 0 }}>✦</div>
+                <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--accent)", fontWeight: 600 }}>Today's Focus</div>
+                {urgentHW.length > 0 && (
+                  <span style={{ fontFamily: "var(--f-mono)", fontSize: 8, fontWeight: 700, textTransform: "uppercase",
+                    letterSpacing: "0.08em", padding: "2px 6px", borderRadius: 3,
+                    background: "rgba(255,80,80,0.15)", border: "1px solid rgba(255,80,80,0.25)", color: "var(--danger)" }}>
+                    {urgentHW.length} urgent
+                  </span>
+                )}
               </div>
               {priorities.map((h, i) => {
                 const s = subjectBy(h.subject);
                 return (
                   <div key={h.id} onClick={() => window.location.hash = "#/homework/" + h.id}
-                    style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 0", cursor: "pointer", borderBottom: i < priorities.length - 1 ? "1px solid var(--hairline)" : "none", transition: "opacity .1s" }}
+                    style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 0", cursor: "pointer",
+                      borderBottom: i < priorities.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                      transition: "opacity .1s" }}
                     onMouseEnter={e => e.currentTarget.style.opacity = "0.7"}
                     onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
                     <div style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--ink-3)", width: 16, flexShrink: 0, paddingTop: 2 }}>{i + 1}.</div>
-                    <div style={{ width: 2.5, height: 32, borderRadius: 2, background: s.color, flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ width: 2.5, height: 32, borderRadius: 2, background: s.color,
+                      boxShadow: `0 0 6px ${s.color}60`, flexShrink: 0, marginTop: 1 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, fontWeight: 500, lineHeight: 1.3, color: "var(--ink)" }}>{h.title}</div>
                       <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: h.urgent ? "var(--danger)" : "var(--ink-3)", marginTop: 3 }}>
@@ -288,23 +312,27 @@ function HomeworkContent() {
                       </div>
                     </div>
                     {h.urgent && (
-                      <span style={{ fontSize: 8.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", padding: "2px 5px", borderRadius: 2, background: "rgba(255,255,255,0.08)", color: "var(--danger)", flexShrink: 0, marginTop: 1 }}>urgent</span>
+                      <span style={{ fontSize: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em",
+                        padding: "2px 5px", borderRadius: 3,
+                        background: "rgba(255,80,80,0.12)", border: "1px solid rgba(255,80,80,0.22)",
+                        color: "var(--danger)", flexShrink: 0, marginTop: 1 }}>urgent</span>
                     )}
                   </div>
                 );
               })}
               {priorityMins > 0 && (
                 <div style={{ marginTop: 12, fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)" }}>
-                  Estimated workload: <span style={{ color: "var(--ink)" }}>{hwFmtTime(priorityMins)}</span>
+                  Estimated workload: <span style={{ color: "var(--accent)" }}>{hwFmtTime(priorityMins)}</span>
                 </div>
               )}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0, paddingTop: 26, minWidth: 172 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0, paddingTop: 32, minWidth: 172 }}>
               <button className="sn-btn primary" style={{ fontSize: 12, justifyContent: "flex-start" }}
                 onClick={() => window.dispatchEvent(new CustomEvent("openQuickAdd", { detail: { type: "study-plan" } }))}>
-                Generate Study Plan →
+                ✦ Generate Study Plan →
               </button>
-              <button className="sn-btn" style={{ fontSize: 12, justifyContent: "flex-start" }}>
+              <button className="sn-btn" style={{ fontSize: 12, justifyContent: "flex-start",
+                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
                 Create Focus Session →
               </button>
               {priorities[0] && (
@@ -336,15 +364,19 @@ function HomeworkContent() {
                   onDrop={e => onKanbanDrop(e, col.id)}
                   onDragLeave={() => setOverCol(null)}
                   style={{
-                    background: isOver ? "var(--accent-soft)" : "var(--bg-2)",
-                    border: "1px solid " + (isOver ? "var(--accent)" : "var(--hairline)"),
+                    background: isOver
+                      ? "rgba(124,122,255,0.08)"
+                      : "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%), var(--surface)",
+                    border: "1px solid " + (isOver ? "rgba(124,122,255,0.4)" : "rgba(255,255,255,0.07)"),
                     borderRadius: "var(--radius)", padding: "10px 8px", minHeight: 200,
                     transition: "background .12s, border-color .12s",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
                   }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 9, paddingBottom: 7, borderBottom: "1px solid var(--hairline)" }}>
-                    <div style={{ width: 5, height: 5, borderRadius: 1, background: col.dotColor, flexShrink: 0 }} />
-                    <span style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-2)", flex: 1 }}>{col.label}</span>
-                    <span style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)" }}>{items.length}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 9, paddingBottom: 7, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ width: 5, height: 5, borderRadius: 1, background: col.dotColor, boxShadow: `0 0 4px ${col.dotColor}`, flexShrink: 0 }} />
+                    <span style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-3)", flex: 1 }}>{col.label}</span>
+                    <span style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)",
+                      background: "rgba(255,255,255,0.06)", padding: "1px 5px", borderRadius: 3 }}>{items.length}</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {items.length === 0 ? (
@@ -371,7 +403,7 @@ function HomeworkContent() {
         <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
 
           {/* Homework by Subject */}
-          <div style={{ background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: "var(--radius)", padding: "13px 14px" }}>
+          <div style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "var(--radius)", padding: "13px 14px", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
             <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)", marginBottom: 11 }}>Homework by Subject</div>
             {subjectCounts.length === 0 ? (
               <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)" }}>No assignments</div>
@@ -381,8 +413,9 @@ function HomeworkContent() {
                   <span style={{ fontSize: 11, color: "var(--ink-2)" }}>{s.short}</span>
                   <span style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)" }}>{s.open}</span>
                 </div>
-                <div style={{ height: 2.5, background: "var(--hairline)", borderRadius: 2, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: ((s.open + s.done) / maxCount * 100) + "%", background: s.color, opacity: 0.65, transition: "width .3s ease" }} />
+                <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: ((s.open + s.done) / maxCount * 100) + "%", background: s.color,
+                    boxShadow: `0 0 4px ${s.color}60`, transition: "width .3s ease" }} />
                 </div>
               </div>
             ))}
@@ -390,7 +423,7 @@ function HomeworkContent() {
 
           {/* Deadline Timeline */}
           {timelineGroups.length > 0 && (
-            <div style={{ background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: "var(--radius)", padding: "13px 14px" }}>
+            <div style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "var(--radius)", padding: "13px 14px", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
               <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)", marginBottom: 11 }}>Deadline Timeline</div>
               {timelineGroups.map((g, gi) => (
                 <div key={g.label} style={{ marginBottom: gi < timelineGroups.length - 1 ? 10 : 0 }}>
@@ -399,10 +432,11 @@ function HomeworkContent() {
                     const s = subjectBy(h.subject);
                     return (
                       <div key={h.id} onClick={() => window.location.hash = "#/homework/" + h.id}
-                        style={{ display: "flex", alignItems: "center", gap: 7, padding: "3.5px 0", cursor: "pointer", borderBottom: hi < g.items.length - 1 ? "1px dashed var(--hairline)" : "none", transition: "opacity .1s" }}
+                        style={{ display: "flex", alignItems: "center", gap: 7, padding: "3.5px 0", cursor: "pointer",
+                          borderBottom: hi < g.items.length - 1 ? "1px dashed rgba(255,255,255,0.05)" : "none", transition: "opacity .1s" }}
                         onMouseEnter={e => e.currentTarget.style.opacity = "0.65"}
                         onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
-                        <div style={{ width: 4, height: 4, borderRadius: 1, background: s.color, flexShrink: 0 }} />
+                        <div style={{ width: 4, height: 4, borderRadius: 1, background: s.color, boxShadow: `0 0 4px ${s.color}`, flexShrink: 0 }} />
                         <span style={{ fontSize: 11, color: "var(--ink-2)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.title}</span>
                         {h.est && <span style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", flexShrink: 0 }}>{h.est}</span>}
                       </div>
@@ -414,41 +448,41 @@ function HomeworkContent() {
           )}
 
           {/* Quick Actions */}
-          <div style={{ background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: "var(--radius)", padding: "13px 14px" }}>
+          <div style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "var(--radius)", padding: "13px 14px", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
             <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)", marginBottom: 10 }}>Quick Actions</div>
             {[
               { label: "+ Add Homework",       action: () => window.dispatchEvent(new CustomEvent("openQuickAdd", { detail: { type: "homework" } })) },
-              { label: "+ Generate Study Plan", action: () => {} },
+              { label: "✦ Generate Study Plan", action: () => {} },
               { label: "+ Create Flashcards",   action: () => { window.location.hash = "#/quizzes"; } },
-              { label: "+ Open Due Today",       action: () => { if (todayHW[0]) window.location.hash = "#/homework/" + todayHW[0].id; } },
+              { label: "→ Open Due Today",       action: () => { if (todayHW[0]) window.location.hash = "#/homework/" + todayHW[0].id; } },
               { label: "+ Start Focus Session",  action: () => {} },
             ].map((a, i) => (
               <button key={i} onClick={a.action}
                 style={{
                   display: "block", width: "100%", textAlign: "left", padding: "6.5px 8px",
-                  background: "transparent", border: "1px solid var(--hairline)", borderRadius: 4,
-                  cursor: "pointer", fontFamily: "var(--f-ui)", fontSize: 11.5, color: "var(--ink-2)",
+                  background: "transparent", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 4,
+                  cursor: "pointer", fontFamily: "var(--f-ui)", fontSize: 11, color: "var(--ink-3)",
                   marginBottom: i < 4 ? 5 : 0, transition: "all .1s",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--ink)"; e.currentTarget.style.color = "var(--ink)"; e.currentTarget.style.background = "var(--bg-2)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--hairline)"; e.currentTarget.style.color = "var(--ink-2)"; e.currentTarget.style.background = "transparent"; }}>
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(124,122,255,0.3)"; e.currentTarget.style.color = "var(--accent)"; e.currentTarget.style.background = "rgba(124,122,255,0.06)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "var(--ink-3)"; e.currentTarget.style.background = "transparent"; }}>
                 {a.label}
               </button>
             ))}
           </div>
 
           {/* Productivity Insights */}
-          <div style={{ background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: "var(--radius)", padding: "13px 14px" }}>
+          <div style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "var(--radius)", padding: "13px 14px", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
             <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)", marginBottom: 11 }}>This Week</div>
             {[
-              { label: "Completed",       val: String(doneHW.length) },
-              { label: "Open",            val: String(openHW.length) },
-              { label: "Avg. completion", val: "1.3d early" },
-              { label: "Most active",     val: topSubject ? topSubject.short : "—" },
+              { label: "Completed",       val: String(doneHW.length),          valColor: doneHW.length > 0 ? "var(--done)" : "var(--ink)" },
+              { label: "Open",            val: String(openHW.length),           valColor: openHW.length > 0 ? "var(--ink)" : "var(--done)" },
+              { label: "Avg. completion", val: "1.3d early",                    valColor: "var(--done)" },
+              { label: "Most active",     val: topSubject ? topSubject.short : "—", valColor: "var(--ink)" },
             ].map((m, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5.5px 0", borderBottom: i < 3 ? "1px solid var(--hairline)" : "none" }}>
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5.5px 0", borderBottom: i < 3 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
                 <span style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{m.label}</span>
-                <span style={{ fontFamily: "var(--f-mono)", fontSize: 12, color: "var(--ink)" }}>{m.val}</span>
+                <span style={{ fontFamily: "var(--f-mono)", fontSize: 12, fontWeight: 600, color: m.valColor }}>{m.val}</span>
               </div>
             ))}
           </div>
@@ -485,44 +519,57 @@ function HwKanbanCard({ hw, onToggle, onDelete, onDragStart, onDragEnd, isDraggi
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       style={{
-        background: "var(--surface)", border: "1px solid var(--hairline)",
+        background: `linear-gradient(135deg, ${s.color}0c 0%, var(--surface) 50%)`,
+        border: `1px solid ${s.color}20`,
         borderRadius: "var(--radius)", overflow: "hidden", cursor: "pointer",
-        opacity: isDragging ? 0.4 : 1,
+        opacity: isDragging ? 0.35 : 1,
         transition: "box-shadow .13s, transform .13s, opacity .13s, border-color .13s",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
       }}
-      onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 3px 14px rgba(30,20,8,0.11)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.borderColor = "var(--rule)"; }}
-      onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; e.currentTarget.style.borderColor = "var(--hairline)"; }}
+      onMouseEnter={e => {
+        e.currentTarget.style.boxShadow = `0 0 0 1px ${s.color}30, 0 5px 16px rgba(0,0,0,0.4)`;
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.borderColor = s.color + "45";
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.2)";
+        e.currentTarget.style.transform = "none";
+        e.currentTarget.style.borderColor = s.color + "20";
+      }}
     >
-      <div style={{ height: 2, background: s.color, opacity: hw.done ? 0.25 : 1 }} />
+      <div style={{ height: 2, background: s.color, opacity: hw.done ? 0.3 : 1, boxShadow: hw.done ? "none" : `0 0 6px ${s.color}` }} />
       <div style={{ padding: "9px 10px 9px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
           <span style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: s.color, flexShrink: 0 }}>{s.short}</span>
           {hw.urgent && !hw.done && (
-            <span style={{ fontSize: 7.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", padding: "1px 4px", borderRadius: 2, background: "rgba(255,255,255,0.08)", color: "var(--danger)", flexShrink: 0 }}>urgent</span>
+            <span style={{ fontSize: 7.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", padding: "1px 4px", borderRadius: 2, background: "rgba(255,80,80,0.12)", border: "1px solid rgba(255,80,80,0.2)", color: "var(--danger)", flexShrink: 0 }}>urgent</span>
           )}
           <div style={{ flex: 1 }} />
           <button onClick={e => { e.stopPropagation(); onToggle(); }} style={{
             width: 15, height: 15, borderRadius: 7.5, flexShrink: 0,
-            border: "1px solid " + (hw.done ? "var(--done)" : "var(--hairline)"),
+            border: "1px solid " + (hw.done ? "var(--done)" : "rgba(255,255,255,0.2)"),
             background: hw.done ? "var(--done)" : "transparent",
             cursor: "pointer", display: "grid", placeItems: "center", transition: "all .1s",
           }}>
             {hw.done && <svg width="7" height="7" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M3 8l3.5 3.5L13 5" /></svg>}
           </button>
         </div>
-        <div style={{ fontFamily: "var(--f-display)", fontSize: 12.5, lineHeight: 1.3, marginBottom: 7, color: hw.done ? "var(--ink-3)" : "var(--ink)", textDecoration: hw.done ? "line-through" : "none" }}>
+        <div style={{ fontFamily: "var(--f-display)", fontSize: 12.5, lineHeight: 1.3, marginBottom: 7, color: hw.done ? "var(--ink-3)" : "var(--ink)", textDecoration: hw.done ? "line-through" : "none", textDecorationColor: "var(--ink-3)" }}>
           {hw.title}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <span style={{ fontSize: 9.5, fontFamily: "var(--f-mono)", padding: "1px 5px", borderRadius: 3, background: hw.urgent && !hw.done ? "rgba(255,255,255,0.06)" : "var(--bg-2)", color: hw.urgent && !hw.done ? "var(--danger)" : "var(--ink-3)" }}>
+          <span style={{ fontSize: 9.5, fontFamily: "var(--f-mono)", padding: "1px 5px", borderRadius: 3,
+            background: hw.urgent && !hw.done ? "rgba(255,80,80,0.1)" : "rgba(255,255,255,0.06)",
+            border: "1px solid " + (hw.urgent && !hw.done ? "rgba(255,80,80,0.2)" : "rgba(255,255,255,0.08)"),
+            color: hw.urgent && !hw.done ? "var(--danger)" : "var(--ink-3)" }}>
             {hw.due}
           </span>
           {hw.est && <span style={{ fontSize: 9, fontFamily: "var(--f-mono)", color: "var(--ink-3)" }}>{hw.est}</span>}
           <div style={{ flex: 1 }} />
           <button onClick={e => { e.stopPropagation(); onDelete(); }}
-            style={{ border: 0, background: "transparent", color: "var(--ink-3)", cursor: "pointer", fontSize: 12, padding: "0 1px", opacity: 0.3, lineHeight: 1, transition: "opacity .1s" }}
+            style={{ border: 0, background: "transparent", color: "var(--ink-3)", cursor: "pointer", fontSize: 12, padding: "0 1px", opacity: 0.25, lineHeight: 1, transition: "opacity .1s" }}
             onMouseEnter={e => e.currentTarget.style.opacity = "0.7"}
-            onMouseLeave={e => e.currentTarget.style.opacity = "0.3"}>×</button>
+            onMouseLeave={e => e.currentTarget.style.opacity = "0.25"}>×</button>
         </div>
       </div>
     </div>

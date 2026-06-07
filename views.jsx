@@ -184,21 +184,33 @@ function QuizzesContent({ onTakeQuiz }) {
           { label: "Readiness",   numVal: avgReadiness, suffix: "%", textFallback: "—", sub: "across upcoming", isNum: true,  accent: avgReadiness != null ? quizReadinessColor(avgReadiness / 100) : null },
         ].map((m, i) => (
           <div key={i} style={{
-            background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: "var(--radius)",
-            padding: "13px 14px",
+            background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%), var(--surface)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: "var(--radius)",
+            padding: "14px 16px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+            transition: "border-color 0.15s, box-shadow 0.15s, transform 0.15s",
           }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--rule)"; e.currentTarget.style.boxShadow = "0 2px 10px rgba(30,20,8,0.09)"; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--hairline)"; e.currentTarget.style.boxShadow = "none"; }}>
-            <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 7 }}>{m.label}</div>
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
+            e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,122,255,0.06)";
+            e.currentTarget.style.transform = "translateY(-1px)";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
+            e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.3)";
+            e.currentTarget.style.transform = "none";
+          }}>
+            <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.13em", marginBottom: 8 }}>{m.label}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              {m.dot && <div style={{ width: 8, height: 8, borderRadius: 1, background: m.dot, flexShrink: 0 }} />}
-              <div style={{ fontFamily: m.isNum ? "var(--f-display)" : "var(--f-mono)", fontSize: m.isNum ? 26 : 18, fontWeight: 400, lineHeight: 1, color: m.accent || "var(--ink)", letterSpacing: m.isNum ? "-0.02em" : 0 }}>
+              {m.dot && <div style={{ width: 8, height: 8, borderRadius: 2, background: m.dot, flexShrink: 0, boxShadow: `0 0 6px ${m.dot}50` }} />}
+              <div style={{ fontFamily: m.isNum ? "var(--f-display)" : "var(--f-mono)", fontSize: m.isNum ? 28 : 18, fontWeight: 400, lineHeight: 1, color: m.accent || "var(--ink)", letterSpacing: m.isNum ? "-0.025em" : 0 }}>
                 {m.numVal != null
                   ? <StatNumber value={m.numVal} suffix={m.suffix} delay={300 + i * 120} duration={1400} />
                   : (m.textVal || m.textFallback || "—")}
               </div>
             </div>
-            <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", marginTop: 6 }}>{m.sub}</div>
+            <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", marginTop: 7 }}>{m.sub}</div>
           </div>
         ))}
       </div>
@@ -281,22 +293,39 @@ function QuizzesContent({ onTakeQuiz }) {
           {/* Study modes — differentiated grid */}
           <div style={{ marginBottom: 32 }}>
             <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 14 }}>Study modes</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-              {QUIZ_STUDY_MODES.map(({ mode, icon, label, desc, accent, bg, glyph }) => (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+              {QUIZ_STUDY_MODES.map(({ mode, icon, label, desc, accent, glyph }) => (
                 <div key={mode} onClick={() => openPicker(mode)}
-                  style={{ padding: "18px 16px 14px", background: bg, border: "1px solid " + accent + "30",
+                  style={{
+                    padding: "16px 14px 14px",
+                    background: `linear-gradient(135deg, ${accent}10 0%, var(--surface) 50%)`,
+                    border: `1px solid ${accent}25`,
                     borderRadius: 8, cursor: "pointer", position: "relative", overflow: "hidden",
-                    transition: "border-color 0.15s, box-shadow 0.15s" }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = accent + "70"; e.currentTarget.style.boxShadow = "0 2px 10px rgba(30,20,8,0.07)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = accent + "30"; e.currentTarget.style.boxShadow = "none"; }}>
+                    transition: "border-color 0.18s, box-shadow 0.18s, transform 0.18s",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = accent + "55";
+                    e.currentTarget.style.boxShadow = `0 0 0 1px ${accent}20, 0 6px 20px rgba(0,0,0,0.4)`;
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = accent + "25";
+                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.transform = "none";
+                  }}>
                   {/* Watermark glyph */}
-                  <div style={{ position: "absolute", right: 8, bottom: -8, fontFamily: "var(--f-display)", fontSize: 54, color: accent, opacity: 0.1, pointerEvents: "none", lineHeight: 1, fontStyle: "italic", userSelect: "none" }}>
+                  <div style={{ position: "absolute", right: 6, bottom: -10, fontFamily: "var(--f-display)", fontSize: 52, color: accent, opacity: 0.08, pointerEvents: "none", lineHeight: 1, fontStyle: "italic", userSelect: "none" }}>
                     {glyph}
                   </div>
-                  <div style={{ fontSize: 15, color: accent, marginBottom: 10, fontFamily: "var(--f-mono)", fontWeight: 700 }}>{icon}</div>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 4, color: "var(--ink)" }}>{label}</div>
-                  <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", marginBottom: 10 }}>{desc}</div>
-                  <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: accent, textTransform: "uppercase", letterSpacing: "0.1em", display: "flex", alignItems: "center", gap: 4 }}>
+                  {/* Mode icon badge */}
+                  <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: 28, height: 28, borderRadius: 7, marginBottom: 10,
+                    background: `${accent}18`, border: `1px solid ${accent}30`,
+                    fontSize: 12, color: accent, fontFamily: "var(--f-mono)", fontWeight: 700,
+                  }}>{icon}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 3, color: "var(--ink)" }}>{label}</div>
+                  <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)", marginBottom: 10, lineHeight: 1.4 }}>{desc}</div>
+                  <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: accent, textTransform: "uppercase", letterSpacing: "0.1em", display: "flex", alignItems: "center", gap: 4 }}>
                     Start {Ico.arrow}
                   </div>
                 </div>
@@ -353,20 +382,23 @@ function QuizzesContent({ onTakeQuiz }) {
 
           {/* AI study recommendations */}
           {allUpcoming.length > 0 && (
-            <div style={{ background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
-              <div style={{ padding: "13px 16px 11px", borderBottom: "1px solid var(--hairline)", display: "flex", alignItems: "center", gap: 7 }}>
-                <span style={{ color: "var(--accent)", fontSize: 11, opacity: 0.8 }}>✦</span>
-                <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)" }}>AI Study Guide</div>
+            <div className="sn-ai-panel" style={{ borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
+              <div style={{ padding: "13px 16px 11px", borderBottom: "1px solid rgba(124,122,255,0.12)", display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 22, height: 22, borderRadius: 5, background: "rgba(124,122,255,0.18)",
+                  fontSize: 10, color: "var(--accent)", flexShrink: 0 }}>✦</div>
+                <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--accent)", fontWeight: 600 }}>AI Study Guide</div>
               </div>
               {allUpcoming.map((q, i) => {
                 const s = subjectBy(q.subject) || SUBJECTS[0];
                 const deckId = deckForSubject(q.subject);
                 const rec = QUIZ_AI_RECS[q.id] || { mode: "Flashcards", reason: "Review all topics before the test.", weakTopic: null };
                 return (
-                  <div key={q.id} style={{ padding: "14px 16px", borderBottom: i < allUpcoming.length - 1 ? "1px dashed var(--hairline)" : "none" }}>
+                  <div key={q.id} style={{ padding: "14px 16px", borderBottom: i < allUpcoming.length - 1 ? "1px dashed rgba(255,255,255,0.06)" : "none" }}>
                     {/* Quiz label */}
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10 }}>
-                      <div style={{ width: 3, alignSelf: "stretch", minHeight: 24, borderRadius: 2, background: s.color, flexShrink: 0, marginTop: 2 }} />
+                      <div style={{ width: 3, alignSelf: "stretch", minHeight: 24, borderRadius: 2,
+                        background: s.color, boxShadow: `0 0 6px ${s.color}60`, flexShrink: 0, marginTop: 2 }} />
                       <div>
                         <div style={{ fontSize: 12.5, fontWeight: 600, lineHeight: 1.3, color: "var(--ink)" }}>{q.title}</div>
                         <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", marginTop: 2 }}>{s.short} · {q.when || "TBD"}</div>
@@ -374,19 +406,22 @@ function QuizzesContent({ onTakeQuiz }) {
                     </div>
                     {/* Recommended mode */}
                     <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-3)", marginBottom: 5 }}>Recommended</div>
-                    <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 9px", borderRadius: 4, background: "var(--accent-soft)", marginBottom: 6 }}>
-                      <span style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--accent-ink)", fontWeight: 600 }}>{rec.mode}</span>
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 9px", borderRadius: 4,
+                      background: "rgba(124,122,255,0.15)", border: "1px solid rgba(124,122,255,0.25)", marginBottom: 6 }}>
+                      <span style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--accent)", fontWeight: 600 }}>{rec.mode}</span>
                     </div>
                     <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)", lineHeight: 1.5, marginBottom: rec.weakTopic ? 8 : 10 }}>{rec.reason}</div>
                     {/* Weak topic callout */}
                     {rec.weakTopic && (
-                      <div style={{ display: "flex", alignItems: "baseline", gap: 6, padding: "7px 9px", borderRadius: 5, background: "rgba(255,255,255,0.06)", marginBottom: 10 }}>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 6, padding: "7px 9px", borderRadius: 5,
+                        background: "rgba(255,80,80,0.08)", border: "1px solid rgba(255,80,80,0.14)", marginBottom: 10 }}>
                         <span style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--danger)", flexShrink: 0 }}>Weak</span>
                         <span style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-2)", lineHeight: 1.4 }}>{rec.weakTopic}</span>
                       </div>
                     )}
                     {/* Quick launch */}
-                    <button className="sn-btn" style={{ fontSize: 11.5, width: "100%", justifyContent: "center" }}
+                    <button className="sn-btn primary" style={{ fontSize: 11, width: "100%", justifyContent: "center",
+                      background: "rgba(124,122,255,0.18)", border: "1px solid rgba(124,122,255,0.3)", color: "var(--accent)" }}
                       onClick={() => launchMode("flashcard", deckId || "subject-" + q.subject)}>
                       Study {s.short} now →
                     </button>
@@ -398,20 +433,25 @@ function QuizzesContent({ onTakeQuiz }) {
 
           {/* Score trend panel */}
           {past.length > 0 && (
-            <div style={{ background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: "var(--radius-lg)", padding: "14px 16px" }}>
+            <div style={{
+              background: "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: "var(--radius-lg)", padding: "14px 16px",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.25)"
+            }}>
               <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)", marginBottom: 14 }}>Score Trend</div>
               {past.map((p, i) => {
                 const s = subjectBy(p.subject);
                 const pct = p.score / p.total;
                 const pColor = pct >= 0.8 ? "var(--done)" : pct >= 0.65 ? "var(--accent)" : "var(--danger)";
                 return (
-                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: i < past.length - 1 ? 9 : 0 }}>
-                    <div style={{ width: 3, height: 20, borderRadius: 2, background: s.color, flexShrink: 0 }} />
+                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: i < past.length - 1 ? 10 : 0 }}>
+                    <div style={{ width: 3, height: 22, borderRadius: 2, background: s.color, boxShadow: `0 0 5px ${s.color}50`, flexShrink: 0 }} />
                     <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", width: 38, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.short}</div>
-                    <div style={{ flex: 1, height: 5, background: "var(--bg-2)", borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{ flex: 1, height: 5, background: "rgba(255,255,255,0.06)", borderRadius: 3, overflow: "hidden" }}>
                       <div className="sn-bar-fill" style={{ height: "100%", width: (pct * 100) + "%", background: pColor, borderRadius: 3 }} />
                     </div>
-                    <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: pColor, width: 30, textAlign: "right", flexShrink: 0 }}>{Math.round(pct * 100)}%</div>
+                    <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, fontWeight: 600, color: pColor, width: 30, textAlign: "right", flexShrink: 0 }}>{Math.round(pct * 100)}%</div>
                   </div>
                 );
               })}
@@ -1167,7 +1207,7 @@ function GradesContent() {
   };
   const gradeInfo = (p) => ({
     color: gradeColor(p),
-    bg: p >= 0.90 ? "var(--done-soft)" : p >= 0.80 ? "#dce8f0" : p >= 0.70 ? "#f5ecd6" : "var(--accent-soft)",
+    bg: p >= 0.90 ? "rgba(74,222,128,0.12)" : p >= 0.80 ? "rgba(99,179,237,0.12)" : p >= 0.70 ? "rgba(251,191,36,0.12)" : "rgba(239,68,68,0.12)",
   });
 
   const avgFor = (sid) => {
@@ -1394,23 +1434,25 @@ function GradesContent() {
       if (files.length) processPdfFiles(files);
     };
     return (
-      <div onClick={closePdfModal} style={{ position: "fixed", inset: 0, background: "rgba(26,22,17,0.55)", zIndex: 9000,
-        display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(3px)" }}>
-        <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--hairline)",
+      <div onClick={closePdfModal} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 9000,
+        display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(6px)" }}>
+        <div onClick={e => e.stopPropagation()} style={{
+          background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%), var(--surface)",
+          border: "1px solid rgba(255,255,255,0.1)",
           borderRadius: 12, width: 480, maxWidth: "95vw", maxHeight: "85vh", overflow: "auto",
-          boxShadow: "0 24px 64px rgba(0,0,0,0.18)" }}>
+          boxShadow: "0 32px 80px rgba(0,0,0,0.6)" }}>
 
           {/* Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "16px 20px", borderBottom: "1px solid var(--hairline)" }}>
+            padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
             <div>
               <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 18, color: "var(--ink)", lineHeight: 1 }}>Import Grades PDF</div>
               <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 {pdfStep === "upload" ? "Report cards, transcripts, grade exports" : pdfStep === "parsing" ? "Reading document…" : "Confirm detected grades"}
               </div>
             </div>
-            <button onClick={closePdfModal} style={{ width: 28, height: 28, borderRadius: 4, border: "1px solid var(--hairline)",
-              background: "var(--bg-2)", color: "var(--ink-3)", fontSize: 13, cursor: "pointer",
+            <button onClick={closePdfModal} style={{ width: 28, height: 28, borderRadius: 4, border: "1px solid rgba(255,255,255,0.1)",
+              background: "rgba(255,255,255,0.06)", color: "var(--ink-3)", fontSize: 13, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
           </div>
 
@@ -1422,9 +1464,9 @@ function GradesContent() {
                 onDragLeave={() => setPdfDragging(false)}
                 onDrop={handleDrop}
                 onClick={() => fileRef.current && fileRef.current.click()}
-                style={{ border: "2px dashed " + (pdfDragging ? "var(--accent)" : "var(--hairline)"),
+                style={{ border: "2px dashed " + (pdfDragging ? "var(--accent)" : "rgba(255,255,255,0.12)"),
                   borderRadius: 10, padding: "48px 32px", textAlign: "center", cursor: "pointer",
-                  background: pdfDragging ? "var(--accent-soft)" : "var(--bg-2)",
+                  background: pdfDragging ? "rgba(124,122,255,0.08)" : "rgba(255,255,255,0.02)",
                   transition: "all 0.18s", userSelect: "none" }}>
                 <div style={{ fontSize: 36, marginBottom: 14, opacity: 0.5 }}>📄</div>
                 <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 17, color: "var(--ink)", marginBottom: 6 }}>
@@ -1439,7 +1481,7 @@ function GradesContent() {
                 <input ref={fileRef} type="file" accept=".pdf,application/pdf" multiple onChange={handleFile} style={{ display: "none" }} />
               </div>
               {pdfError && (
-                <div style={{ marginTop: 12, padding: "10px 14px", background: "#fff0f0", border: "1px solid #fcc",
+                <div style={{ marginTop: 12, padding: "10px 14px", background: "rgba(255,80,80,0.1)", border: "1px solid rgba(255,80,80,0.2)",
                   borderRadius: 6, fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--danger)" }}>{pdfError}</div>
               )}
               <div style={{ marginTop: 14, fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", lineHeight: 1.6 }}>
@@ -1565,11 +1607,15 @@ function GradesContent() {
     })() : effectiveGpa;
 
     return (
-      <div style={{ background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: 8, overflow: "hidden",
-        gridColumn: gpaExpanded ? "1 / -1" : undefined, transition: "all 0.2s" }}>
+      <div style={{
+        background: "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)",
+        border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, overflow: "hidden",
+        gridColumn: gpaExpanded ? "1 / -1" : undefined, transition: "all 0.2s",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.3)"
+      }}>
         {/* Main row — always visible */}
         <div onClick={() => setGpaExpanded(e => !e)} style={{ padding: "18px 20px", display: "flex", alignItems: "center", gap: 20, cursor: "pointer",
-          background: "var(--surface)", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          boxShadow: "0 1px 0 rgba(255,255,255,0.06)" }}>
           <div style={{ position: "relative", width: 108, height: 108, flexShrink: 0 }}>
             <svg width="108" height="108" style={{ transform: "rotate(135deg)" }}>
               <circle cx="54" cy="54" r={arcR} fill="none" stroke="var(--rule)" strokeWidth="8" opacity="0.7"
@@ -1631,7 +1677,7 @@ function GradesContent() {
 
         {/* Expanded panel */}
         {gpaExpanded && (
-          <div style={{ borderTop: "1px solid var(--hairline)", padding: "16px", background: "var(--bg-2)",
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "16px", background: "rgba(255,255,255,0.02)",
             display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
             {/* Left: term breakdown + toggle */}
             <div>
@@ -1689,7 +1735,7 @@ function GradesContent() {
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
-                    background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: 6 }}>
+                    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6 }}>
                     <div style={{ textAlign: "center" }}>
                       <div style={{ fontFamily: "var(--f-mono)", fontSize: 8, color: "var(--ink-3)", marginBottom: 3 }}>Current</div>
                       <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 20,
@@ -1723,12 +1769,18 @@ function GradesContent() {
   // Metrics strip (3 more cards beside GPA)
   function MetricCard({ label, value, sub, subColor, valueColor, accent }) {
     return (
-      <div style={{ background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: 8,
-        padding: "18px 20px", borderLeft: accent ? "3px solid " + accent : "3px solid var(--hairline)",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+      <div style={{
+        background: accent
+          ? `linear-gradient(135deg, ${accent}12 0%, var(--surface) 55%)`
+          : "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)",
+        border: "1px solid rgba(255,255,255,0.07)",
+        borderLeft: accent ? "3px solid " + accent : "1px solid rgba(255,255,255,0.07)",
+        borderRadius: 8, padding: "18px 20px",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.25)",
+      }}>
         <div style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)", marginBottom: 9 }}>{label}</div>
         <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 22, lineHeight: 1.1, color: valueColor || "var(--ink)", marginBottom: 7, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</div>
-        {sub && <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: subColor || "var(--ink-2)", letterSpacing: "0.02em" }}>{sub}</div>}
+        {sub && <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: subColor || "var(--ink-3)", letterSpacing: "0.02em" }}>{sub}</div>}
       </div>
     );
   }
@@ -1741,9 +1793,9 @@ function GradesContent() {
     return (
       <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
         style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px",
-          background: hov ? "var(--bg-2)" : "var(--surface)",
-          border: "1px solid var(--hairline)", borderRadius: 5,
-          transition: "background 0.13s", cursor: "default", minWidth: 0, flex: "0 0 auto" }}>
+          background: hov ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.03)",
+          border: "1px solid " + (hov ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.07)"),
+          borderRadius: 5, transition: "all 0.13s", cursor: "default", minWidth: 0, flex: "0 0 auto" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 12, color: "var(--ink)", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{e.title}</div>
           <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", marginTop: 1 }}>{e.type} · {e.date}</div>
@@ -1793,14 +1845,14 @@ function GradesContent() {
           onClick={() => { setExpanded(isExpanded ? null : s.id); setIsAdding(false); }}
           style={{ display: "grid", gridTemplateColumns: "1fr 60px 72px 60px 100px",
             alignItems: "center", padding: "10px 16px", gap: 12,
-            background: isExpanded ? "var(--bg-2)" : rowHov ? "var(--surface)" : "transparent",
-            borderBottom: isExpanded ? "none" : "1px solid var(--hairline)",
+            background: isExpanded ? "rgba(255,255,255,0.04)" : rowHov ? "rgba(255,255,255,0.025)" : "transparent",
+            borderBottom: isExpanded ? "none" : "1px solid rgba(255,255,255,0.06)",
             cursor: "pointer", transition: "background 0.13s",
-            boxShadow: rowHov && !isExpanded ? "inset 0 0 0 1px var(--hairline)" : "none" }}>
+            boxShadow: rowHov && !isExpanded ? `inset 3px 0 0 ${s.color}` : "none" }}>
 
           {/* Subject name */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-            <div style={{ width: 3, height: 32, borderRadius: 2, background: s.color, flexShrink: 0 }} />
+            <div style={{ width: 3, height: 32, borderRadius: 2, background: s.color, flexShrink: 0, boxShadow: rowHov ? `0 0 6px ${s.color}60` : "none", transition: "box-shadow 0.13s" }} />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 14.5, color: "var(--ink)", lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
@@ -1869,7 +1921,7 @@ function GradesContent() {
 
         {/* Expanded panel */}
         {isExpanded && (
-          <div style={{ padding: "0 16px 14px", borderBottom: "1px solid var(--hairline)", background: "var(--bg-2)" }}>
+          <div style={{ padding: "0 16px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)", borderLeft: `3px solid ${s.color}` }}>
             {/* Entry chips */}
             {es.length > 0 ? (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: isAdding ? 10 : 0 }}>
@@ -1912,14 +1964,18 @@ function GradesContent() {
   // Sidebar panel shell
   function SidePanel({ title, badge, dot, children }) {
     return (
-      <div style={{ background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: 8, overflow: "hidden", marginBottom: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+      <div style={{
+        background: "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)",
+        border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, overflow: "hidden", marginBottom: 10,
+        boxShadow: "0 2px 10px rgba(0,0,0,0.25)"
+      }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "10px 14px", borderBottom: "1px solid var(--hairline)", background: "var(--bg-2)" }}>
+          padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            {dot && <div style={{ width: 5, height: 5, borderRadius: "50%", background: dot }} />}
-            <span style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-2)" }}>{title}</span>
+            {dot && <div style={{ width: 5, height: 5, borderRadius: "50%", background: dot, boxShadow: `0 0 5px ${dot}` }} />}
+            <span style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)" }}>{title}</span>
           </div>
-          {badge && <span style={{ fontFamily: "var(--f-mono)", fontSize: 8, color: "var(--ink-3)", background: "var(--bg)", border: "1px solid var(--hairline)", padding: "2px 6px", borderRadius: 3 }}>{badge}</span>}
+          {badge && <span style={{ fontFamily: "var(--f-mono)", fontSize: 8, color: "var(--accent)", background: "rgba(124,122,255,0.12)", border: "1px solid rgba(124,122,255,0.2)", padding: "2px 7px", borderRadius: 3 }}>{badge}</span>}
         </div>
         {children}
       </div>
@@ -2059,8 +2115,8 @@ function GradesContent() {
             return (
               <div key={e.id} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
                 style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 14px",
-                  background: hov ? "var(--bg-2)" : "transparent",
-                  borderBottom: i < allEntries.length - 1 ? "1px solid var(--hairline)" : "none",
+                  background: hov ? "rgba(255,255,255,0.03)" : "transparent",
+                  borderBottom: i < allEntries.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
                   transition: "background 0.13s" }}>
                 <div style={{ width: 5, height: 5, borderRadius: "50%", background: e.subjectColor, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -2099,8 +2155,8 @@ function GradesContent() {
             return (
               <div key={s.id} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
                 style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px 14px",
-                  background: hov ? "var(--bg-2)" : "transparent",
-                  borderBottom: i < forecastable.length - 1 ? "1px solid var(--hairline)" : "none",
+                  background: hov ? "rgba(255,255,255,0.03)" : "transparent",
+                  borderBottom: i < forecastable.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
                   transition: "background 0.13s" }}>
                 <div style={{ width: 4, height: 4, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -2221,17 +2277,21 @@ function GradesContent() {
           <div className="pg-section" style={{ display: "grid", gridTemplateColumns: "1fr 256px", gap: 16, alignItems: "start", animationDelay: "0.25s" }}>
 
             {/* Subject table */}
-            <div style={{ background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: 8, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div style={{
+              background: "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)",
+              border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, overflow: "hidden",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.3)"
+            }}>
               {/* Column headers */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 72px 60px 100px",
-                padding: "8px 16px", borderBottom: "1px solid var(--hairline)", gap: 12, background: "var(--bg-2)" }}>
+                padding: "8px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", gap: 12, background: "rgba(255,255,255,0.02)" }}>
                 {[["Subject","left"],["Trend","left"],["Score","right"],["Grade","right"],["Target","right"]].map(([h,a]) => (
                   <div key={h} style={{ fontFamily: "var(--f-mono)", fontSize: 7.5, textTransform: "uppercase",
                     letterSpacing: "0.1em", color: "var(--ink-3)", textAlign: a }}>{h}</div>
                 ))}
               </div>
               {subjectsWithStats.map(s => <SubjectRow key={s.id} s={s} />)}
-              <div style={{ padding: "10px 16px", borderTop: "1px solid var(--hairline)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-3)", opacity: 0.6 }}>
                   {subjectsWithStats.length} subject{subjectsWithStats.length !== 1 ? "s" : ""} · click any row to log a grade
                 </span>
@@ -3143,15 +3203,19 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
   // Sidebar panel shell
   function SidePanel({ title, badge, dot, children }) {
     return (
-      <div style={{ background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: 8, overflow: "hidden", marginBottom: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+      <div style={{
+        background: "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)",
+        border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, overflow: "hidden", marginBottom: 10,
+        boxShadow: "0 2px 10px rgba(0,0,0,0.25)"
+      }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "10px 14px", borderBottom: "1px solid var(--hairline)", background: "var(--bg-2)" }}>
+          padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            {dot && <div style={{ width: 5, height: 5, borderRadius: "50%", background: dot }} />}
-            <span style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-2)" }}>{title}</span>
+            {dot && <div style={{ width: 5, height: 5, borderRadius: "50%", background: dot, boxShadow: `0 0 5px ${dot}` }} />}
+            <span style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)" }}>{title}</span>
           </div>
-          {badge && <span style={{ fontFamily: "var(--f-mono)", fontSize: 8, color: "var(--ink-3)",
-            background: "var(--bg)", border: "1px solid var(--hairline)", padding: "2px 6px", borderRadius: 3 }}>{badge}</span>}
+          {badge && <span style={{ fontFamily: "var(--f-mono)", fontSize: 8, color: "var(--accent)",
+            background: "rgba(124,122,255,0.12)", border: "1px solid rgba(124,122,255,0.2)", padding: "2px 7px", borderRadius: 3 }}>{badge}</span>}
         </div>
         {children}
       </div>
@@ -3159,26 +3223,33 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
   }
 
   function MetricsStrip() {
+    const accentColor = activeSubject ? activeSubject.color : "var(--accent)";
+    const growthColor = notesThisWeek > 0 ? "var(--done)" : "var(--ink-3)";
     const items = [
       { label: "Total Notes",      value: allNotes.length || "0",
         sub: SUBJECTS.length + " subjects", subColor: "var(--ink-3)" },
       { label: "Active Subject",   value: activeSubject ? activeSubject.short : "—",
         sub: activeSubject ? (subjectNoteCounts[activeSubject.id] || 0) + " notes" : "No notes yet",
-        subColor: "var(--ink-3)", accent: true },
+        subColor: "var(--ink-3)", accentLeft: true },
       { label: "Last Edited",      value: lastEdited ? lastEdited.title.split(" ").slice(0, 2).join(" ") : "—",
         sub: lastEdited ? lastEdited.when : "No notes yet", subColor: "var(--ink-3)" },
       { label: "Knowledge Growth", value: notesThisWeek > 0 ? "+" + notesThisWeek : "0",
-        sub: "notes this week", subColor: "var(--ink-3)", spark: true },
+        sub: "notes this week", subColor: growthColor, spark: true, valueColor: growthColor },
     ];
     return (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 16 }}>
         {items.map((item, i) => (
           <div key={i} style={{
-            background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: 8, padding: "13px 15px",
-            borderLeft: item.accent ? "2px solid var(--accent)" : "1px solid var(--hairline)",
+            background: item.accentLeft
+              ? `linear-gradient(135deg, ${accentColor}12 0%, var(--surface) 55%)`
+              : "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderLeft: item.accentLeft ? `2px solid ${accentColor}` : "1px solid rgba(255,255,255,0.07)",
+            borderRadius: 8, padding: "13px 15px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
           }}>
             <div style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-3)", marginBottom: 7 }}>{item.label}</div>
-            <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 20, lineHeight: 1, color: "var(--ink)", marginBottom: 5,
+            <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 20, lineHeight: 1, color: item.valueColor || "var(--ink)", marginBottom: 5,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.value}</div>
             {item.spark && (() => {
               const w = 56, bl = 15;
@@ -3188,7 +3259,7 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
                 : `M0,${bl} C${w*0.3},${bl} ${w*0.5},${bl - rise*0.6} ${w},${bl - rise}`;
               return (
                 <svg width="56" height="18" style={{ display: "block", marginBottom: 4 }}>
-                  <path d={d} fill="none" stroke="var(--ink-3)" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.5" />
+                  <path d={d} fill="none" stroke={notesThisWeek > 0 ? "var(--done)" : "var(--ink-3)"} strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.7" />
                 </svg>
               );
             })()}
@@ -3211,11 +3282,11 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
       <div style={{ position: "relative", marginBottom: 16, zIndex: 50 }}>
         <div style={{
           display: "flex", alignItems: "center", gap: 10,
-          background: "var(--surface)",
-          border: "1px solid " + (searchFocused ? "var(--accent)" : "var(--hairline)"),
+          background: "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)",
+          border: "1px solid " + (searchFocused ? "rgba(124,122,255,0.5)" : "rgba(255,255,255,0.08)"),
           borderRadius: showDropdown ? "8px 8px 0 0" : 8,
           padding: "0 16px", height: 48,
-          boxShadow: searchFocused ? "0 0 0 3px var(--accent-soft)" : "0 1px 4px rgba(26,22,17,0.06)",
+          boxShadow: searchFocused ? "0 0 0 3px rgba(124,122,255,0.12), 0 2px 12px rgba(0,0,0,0.3)" : "0 2px 8px rgba(0,0,0,0.25)",
           transition: "border-color 0.15s, box-shadow 0.15s, border-radius 0.1s",
         }}>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke={searchFocused ? "var(--ink-2)" : "var(--ink-3)"} strokeWidth="1.6" strokeLinecap="round" style={{ flexShrink: 0, transition: "stroke 0.15s" }}>
@@ -3243,9 +3314,9 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
         {showDropdown && (
           <div style={{
             position: "absolute", top: "100%", left: 0, right: 0,
-            background: "var(--surface)", border: "1px solid var(--accent)",
-            borderTop: "1px solid var(--hairline)", borderRadius: "0 0 8px 8px",
-            boxShadow: "0 8px 24px rgba(26,22,17,0.10)",
+            background: "var(--surface)", border: "1px solid rgba(124,122,255,0.35)",
+            borderTop: "1px solid rgba(255,255,255,0.06)", borderRadius: "0 0 8px 8px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,122,255,0.08)",
             overflow: "hidden",
           }}>
             {dropNotes.length > 0 && (
@@ -3260,7 +3331,7 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
                     <div key={n.id + i} onMouseDown={() => onOpenNote(n.subjectId, n.id)}
                       style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 14px",
                         cursor: "pointer", transition: "background 0.1s" }}
-                      onMouseEnter={e => e.currentTarget.style.background = "var(--bg-2)"}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(124,122,255,0.06)"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                       <div style={{ width: 5, height: 5, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
                       <span style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 13, color: "var(--ink)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.title}</span>
@@ -3277,7 +3348,7 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
               <div key={i} onMouseDown={a.action || undefined}
                 style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "8px 14px", cursor: a.action ? "pointer" : "default", transition: "background 0.1s" }}
-                onMouseEnter={e => e.currentTarget.style.background = "var(--bg-2)"}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(124,122,255,0.06)"}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                 <span style={{ fontSize: 12.5, color: "var(--ink-2)" }}>{a.label}</span>
                 <kbd style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)",
@@ -3301,21 +3372,22 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
         onClick={() => onOpenNote(n.subjectId, n.id)}
         style={{
           display: "flex", alignItems: "center", gap: 12, padding: "9px 14px",
-          background: hov ? "var(--bg-2)" : "transparent",
-          borderBottom: isLast ? "none" : "1px solid var(--hairline)",
+          background: hov ? "rgba(255,255,255,0.035)" : "transparent",
+          borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.05)",
           cursor: "pointer", transition: "background 0.13s",
         }}>
-        <div style={{ width: 3, height: 28, borderRadius: 1.5, background: s.color, flexShrink: 0 }} />
+        <div style={{ width: 3, height: 28, borderRadius: 1.5, background: s.color,
+          boxShadow: hov ? `0 0 6px ${s.color}60` : "none", flexShrink: 0, transition: "box-shadow 0.13s" }} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 14, color: "var(--ink)",
             lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.title}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
             <span style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.08em",
-              color: "var(--ink-3)", background: "var(--bg-2)", border: "1px solid var(--hairline)",
+              color: "var(--ink-3)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
               padding: "1px 5px", borderRadius: 3 }}>{s.short}</span>
             {(n.tags || []).slice(0, 2).map(t => (
               <span key={t} style={{ fontFamily: "var(--f-mono)", fontSize: 8, color: "var(--accent)",
-                background: "var(--accent-soft)", padding: "1px 5px", borderRadius: 3 }}>
+                background: "rgba(124,122,255,0.12)", border: "1px solid rgba(124,122,255,0.2)", padding: "1px 5px", borderRadius: 3 }}>
                 {t.startsWith("#") ? t : "#" + t}
               </span>
             ))}
@@ -3336,12 +3408,16 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
     const shown  = recent.slice(0, 7);
     const title  = searchQuery ? "Search Results" : tagFilter ? "Tag: " + tagFilter : "Recent Notes";
     return (
-      <div style={{ background: "var(--surface)", border: "1px solid var(--hairline)", borderRadius: 8, overflow: "hidden", marginBottom: 14 }}>
+      <div style={{
+        background: "linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), var(--surface)",
+        border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, overflow: "hidden", marginBottom: 14,
+        boxShadow: "0 2px 12px rgba(0,0,0,0.25)"
+      }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "10px 14px", borderBottom: "1px solid var(--hairline)", background: "var(--bg-2)" }}>
+          padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--accent)" }} />
-            <span style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-2)" }}>{title}</span>
+            <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--accent)", boxShadow: "0 0 5px var(--accent)" }} />
+            <span style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)" }}>{title}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {tagFilter && (
@@ -3387,14 +3463,16 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
       <div
         onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
         style={{
-          background: hov ? "var(--surface)" : "var(--bg-2)",
-          borderTop: "1px solid " + (hov ? s.color + "55" : "var(--hairline)"),
-          borderRight: "1px solid " + (hov ? s.color + "55" : "var(--hairline)"),
-          borderBottom: "1px solid " + (hov ? s.color + "55" : "var(--hairline)"),
-          borderLeft: "3px solid " + s.color,
+          background: hov
+            ? `linear-gradient(135deg, ${s.color}18 0%, var(--surface) 48%)`
+            : `linear-gradient(135deg, ${s.color}0d 0%, var(--surface) 55%)`,
+          borderTop: `1px solid ${hov ? s.color + "50" : "rgba(255,255,255,0.06)"}`,
+          borderRight: `1px solid ${hov ? s.color + "35" : "rgba(255,255,255,0.06)"}`,
+          borderBottom: `1px solid ${hov ? s.color + "35" : "rgba(255,255,255,0.06)"}`,
+          borderLeft: `3px solid ${s.color}`,
           borderRadius: 8, padding: "14px 14px 12px",
-          transition: "all 0.15s ease",
-          boxShadow: hov ? "0 3px 14px " + s.color + "12, 0 1px 4px rgba(26,22,17,0.05)" : "0 1px 2px rgba(26,22,17,0.03)",
+          transition: "all 0.18s ease",
+          boxShadow: hov ? `0 0 0 1px ${s.color}20, 0 6px 20px rgba(0,0,0,0.4)` : "0 2px 8px rgba(0,0,0,0.2)",
           transform: hov ? "translateY(-1px)" : "none",
         }}>
         {/* Header */}
@@ -3416,8 +3494,8 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
             {preview.map((n, i) => (
               <div key={n.id} onClick={e => { e.stopPropagation(); onOpenNote(s.id, n.id); }}
                 style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "5px 0", borderBottom: i < preview.length - 1 ? "1px solid var(--hairline)" : "none",
-                  cursor: "pointer" }}
+                  padding: "5px 0", borderBottom: i < preview.length - 1 ? `1px solid ${s.color}18` : "none",
+                  cursor: "pointer", transition: "opacity 0.13s" }}
                 onMouseEnter={e => e.currentTarget.style.opacity = "0.7"}
                 onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
                 <span style={{ fontSize: 12, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{n.title}</span>
@@ -3430,8 +3508,8 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
             <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 13, color: "var(--ink-3)", lineHeight: 1.3 }}>No notes yet.</div>
             <button onClick={e => { e.stopPropagation(); newNote(); }}
               style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, alignSelf: "flex-start",
-                padding: "4px 10px", borderRadius: 4, background: "transparent",
-                border: "1px solid var(--hairline)", color: "var(--ink-2)", cursor: "pointer" }}>+ Create note</button>
+                padding: "4px 10px", borderRadius: 4, background: `${s.color}12`,
+                border: `1px solid ${s.color}30`, color: s.color, cursor: "pointer" }}>+ Create note</button>
           </div>
         )}
       </div>
@@ -3456,8 +3534,8 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
             const [hov, setHov] = React.useState(false);
             return (
               <div key={i} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-                style={{ padding: "9px 14px", borderBottom: i < insightItems.length - 1 ? "1px solid var(--hairline)" : "none",
-                  background: hov ? "var(--bg-2)" : "transparent", transition: "background 0.13s" }}>
+                style={{ padding: "9px 14px", borderBottom: i < insightItems.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                  background: hov ? "rgba(255,255,255,0.03)" : "transparent", transition: "background 0.13s" }}>
                 <div style={{ fontFamily: "var(--f-mono)", fontSize: 8, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-3)", marginBottom: 3 }}>{item.label}</div>
                 <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 13.5,
                   color: item.value === "—" ? "var(--ink-3)" : "var(--ink)", lineHeight: 1.2,
@@ -3500,7 +3578,17 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
       { icon: "◎", label: "Explain a concept",        sub: "AI-powered deep dive",          action: () => window.dispatchEvent(new CustomEvent("openAI")) },
     ];
     return (
-      <SidePanel title="AI Workspace" dot="var(--ochre)" badge="Powered by AI">
+      <div className="sn-ai-panel" style={{ borderRadius: 8, overflow: "hidden", marginBottom: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "10px 14px", borderBottom: "1px solid rgba(124,122,255,0.12)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 20, height: 20, borderRadius: 4, background: "rgba(124,122,255,0.18)", fontSize: 9, color: "var(--accent)" }}>✦</div>
+            <span style={{ fontFamily: "var(--f-mono)", fontSize: 8.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--accent)", fontWeight: 600 }}>AI Workspace</span>
+          </div>
+          <span style={{ fontFamily: "var(--f-mono)", fontSize: 8, color: "var(--accent)",
+            background: "rgba(124,122,255,0.12)", border: "1px solid rgba(124,122,255,0.2)", padding: "2px 7px", borderRadius: 3 }}>Powered by AI</span>
+        </div>
         <div style={{ paddingTop: 2, paddingBottom: 2 }}>
           {tools.map((t, i) => {
             const [hov, setHov] = React.useState(false);
@@ -3508,13 +3596,16 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
               <div key={i} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
                 onClick={t.action || undefined}
                 style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 14px",
-                  background: hov ? "var(--bg-2)" : "transparent",
-                  borderBottom: i < tools.length - 1 ? "1px solid var(--hairline)" : "none",
+                  background: hov && t.action ? "rgba(124,122,255,0.06)" : "transparent",
+                  borderBottom: i < tools.length - 1 ? "1px solid rgba(124,122,255,0.07)" : "none",
                   cursor: t.action ? "pointer" : "default", transition: "background 0.13s",
-                  opacity: t.action ? 1 : 0.55 }}>
-                <span style={{ fontFamily: "var(--f-display)", fontSize: 14, color: "var(--ochre)", width: 18, textAlign: "center", flexShrink: 0 }}>{t.icon}</span>
+                  opacity: t.action ? 1 : 0.5 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 22, height: 22, borderRadius: 5, flexShrink: 0,
+                  background: t.action ? "rgba(124,122,255,0.12)" : "rgba(255,255,255,0.04)",
+                  fontSize: 10, color: t.action ? "var(--accent)" : "var(--ink-3)" }}>{t.icon}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12.5, color: "var(--ink)", lineHeight: 1.2 }}>{t.label}</div>
+                  <div style={{ fontSize: 12.5, color: t.action ? "var(--ink)" : "var(--ink-3)", lineHeight: 1.2 }}>{t.label}</div>
                   <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", marginTop: 1 }}>{t.sub}</div>
                 </div>
                 {t.action && <span style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: hov ? "var(--accent)" : "var(--ink-3)", transition: "color 0.13s", flexShrink: 0 }}>→</span>}
@@ -3522,7 +3613,7 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
             );
           })}
         </div>
-      </SidePanel>
+      </div>
     );
   }
 
@@ -3555,12 +3646,16 @@ function NotesIndexContent({ onOpenSubject, onOpenNote }) {
     <>
       <div className="pg-header" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
         <div>
-          <div style={{ fontFamily: "var(--f-mono)", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-3)", marginBottom: 8 }}>Notes</div>
+          <div style={{ fontFamily: "var(--f-mono)", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 8, opacity: 0.75 }}>Notes</div>
           <h1 style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: "2.2rem", color: "var(--ink)", margin: 0, fontWeight: 400, lineHeight: 1.05 }}>Notes.</h1>
-          <div style={{ color: "var(--ink-2)", marginTop: 6, fontSize: "0.95rem" }}>Your personal knowledge base.</div>
+          <div style={{ color: "var(--ink-3)", marginTop: 6, fontSize: "0.93rem" }}>
+            {allNotes.length > 0
+              ? `${allNotes.length} notes across ${SUBJECTS.length} subjects`
+              : "Your personal knowledge base."}
+          </div>
         </div>
-        <div style={{ paddingTop: 6 }}>
-          <button className="sn-btn ghost" onClick={newNote}>+ New note</button>
+        <div style={{ paddingTop: 6, display: "flex", alignItems: "center", gap: 8 }}>
+          <button className="sn-btn primary" onClick={newNote} style={{ fontSize: 12 }}>+ New note</button>
         </div>
       </div>
 

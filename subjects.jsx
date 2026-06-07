@@ -38,24 +38,75 @@ function SubjectsContent({ view = "cards", onOpenSubject, onChangeView }) {
       <div className={view === "list" ? "subj-list" : ""} style={{
         display: view === "list" ? "flex" : "grid",
         flexDirection: view === "list" ? "column" : undefined,
-        gap: view === "list" ? 10 : 18,
+        gap: view === "list" ? 8 : 16,
         gridTemplateColumns: view === "cards" ? "repeat(auto-fill, minmax(240px, 1fr))" : undefined,
       }}>
-        {SUBJECTS.map((s) => (
-          <div key={s.id} className="subj-card" style={{ "--c": s.color }} onClick={() => onOpenSubject && onOpenSubject(s.id)}>
-            <div className="label">{s.short} · Period {(SUBJECTS.indexOf(s) % 7) + 1} · Rm {s.room}</div>
-            <div className="title">{s.name}</div>
-            <div className="grade">{s.grade}{s.grade !== "P" && <small> · {s.teacher.split(" ").pop()}</small>}</div>
-            {view === "cards" && (
-              <div style={{ height: 1, background: "var(--hairline)", margin: "4px 0" }}></div>
-            )}
-            <div className="stats">
-              <span><b>{s.notes}</b> notes</span>
-              <span><b>{s.hw}</b> hw</span>
-              <span><b>{s.quizzes}</b> quizzes</span>
+        {SUBJECTS.map((s, si) => {
+          const openHW = HOMEWORK.filter(h => h.subject === s.id && !h.done).length;
+          const totalHW = HOMEWORK.filter(h => h.subject === s.id).length;
+          const hwPct = totalHW > 0 ? Math.round((1 - openHW / totalHW) * 100) : 100;
+          const gradeColor = s.grade === "A+" || s.grade === "A" ? "var(--done)"
+            : s.grade === "A-" || s.grade === "B+" ? "var(--ochre)"
+            : s.grade === "P" ? "var(--ink-2)"
+            : "var(--ink)";
+
+          if (view === "list") {
+            return (
+              <div key={s.id} className="subj-card" style={{ "--c": s.color }} onClick={() => onOpenSubject && onOpenSubject(s.id)}>
+                <div className="label">{s.short}</div>
+                <div className="title">{s.name}</div>
+                <div className="grade">{s.grade}</div>
+                <div className="stats">
+                  <span><b>{s.notes}</b> notes</span>
+                  <span><b>{s.hw}</b> hw</span>
+                  <span><b>{s.quizzes}</b> quizzes</span>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={s.id} className="subj-card"
+              style={{
+                "--c": s.color,
+                background: `linear-gradient(135deg, ${s.color}18 0%, var(--surface) 44%)`,
+                borderTop: `1px solid ${s.color}40`,
+                paddingBottom: 0,
+                gap: 0,
+              }}
+              onClick={() => onOpenSubject && onOpenSubject(s.id)}>
+
+              {/* Top: short label + grade badge */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                <div>
+                  <div className="label" style={{ marginBottom: 2 }}>{s.short} · P{(si % 7) + 1}</div>
+                  <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", letterSpacing: "0.1em" }}>RM {s.room} · {s.teacher.split(" ").pop()}</div>
+                </div>
+                <div style={{
+                  fontFamily: "var(--f-display)", fontSize: 28, lineHeight: 1,
+                  color: gradeColor, letterSpacing: "-0.02em",
+                  textShadow: s.grade === "A+" || s.grade === "A" ? `0 0 20px ${s.color}50` : "none",
+                }}>{s.grade}</div>
+              </div>
+
+              {/* Subject name */}
+              <div className="title" style={{ marginBottom: 14 }}>{s.name}</div>
+
+              {/* Stats row */}
+              <div style={{ height: 1, background: `${s.color}25`, marginBottom: 10 }} />
+              <div className="stats" style={{ paddingBottom: 12 }}>
+                <span><b>{s.notes}</b> <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)" }}>notes</span></span>
+                <span><b>{s.hw}</b> <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)" }}>hw</span></span>
+                <span><b>{s.quizzes}</b> <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)" }}>quizzes</span></span>
+              </div>
+
+              {/* HW completion strip at bottom */}
+              <div className="subj-progress-strip" style={{ margin: "0 -18px", borderRadius: 0 }}>
+                <div className="subj-progress-fill" style={{ width: hwPct + "%", background: s.color }} />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );
