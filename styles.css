@@ -285,6 +285,16 @@ body, html { margin: 0; padding: 0; }
     0 1px 3px rgba(30,20,8,0.09),
     0 4px 14px rgba(30,20,8,0.055),
     0 2px 0 0 var(--rule);
+  transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), box-shadow 0.2s cubic-bezier(0.22,1,0.36,1);
+}
+.sn-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 0.5px rgba(40,28,12,0.06),
+    0 1px 0 rgba(255,255,255,0.72) inset,
+    0 4px 16px rgba(30,20,8,0.14),
+    0 14px 36px rgba(30,20,8,0.10),
+    0 2px 0 0 var(--rule);
 }
 .sn-card.paper {
   background:
@@ -433,7 +443,7 @@ body, html { margin: 0; padding: 0; }
   min-height: 110px;
   display: flex; flex-direction: column; gap: 6px;
 }
-.sched-day.today { background: var(--accent); border-color: var(--accent); color: rgba(255,255,255,0.9); }
+.sched-day.today { background: var(--accent); border-color: var(--accent); color: rgba(255,255,255,0.9); box-shadow: 0 0 0 2px var(--accent), 0 4px 20px rgba(0,0,0,0.2); transform: translateY(-2px); }
 .sched-day.today .dn { color: rgba(255,255,255,0.6); }
 .sched-day.today .dd { color: #fff; }
 .sched-day.today .pill { background: rgba(255,255,255,0.15); color: #fff; }
@@ -441,11 +451,14 @@ body, html { margin: 0; padding: 0; }
 .sched-day .dd { font-family: var(--f-display); font-size: 18px; line-height: 1; }
 .sched-day .pill {
   font-family: var(--f-mono); font-size: 10px;
-  padding: 2px 6px; border-radius: 3px;
+  padding: 3px 7px; border-radius: 3px;
   background: var(--c-bg, var(--bg-2));
   color: var(--c, var(--ink-2));
   border-left: 2px solid var(--c, var(--ink-3));
+  line-height: 1.3;
 }
+.sched-day:not(.today) { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.sched-day:not(.today):hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
 
 /* Quote / note */
 .note-line {
@@ -550,10 +563,12 @@ body, html { margin: 0; padding: 0; }
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--ink-3);
-  opacity: 0.5;
-  padding-left: 1px;
+  opacity: 0.75;
+  padding-left: 10px;
   margin-bottom: -12px;
   user-select: none;
+  border-left: 2px solid var(--accent);
+  border-opacity: 0.5;
 }
 .sched-now-row { background: var(--accent-soft) !important; border-radius: 4px; }
 .sched-day { position: relative; }

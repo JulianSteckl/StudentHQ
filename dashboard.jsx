@@ -582,6 +582,26 @@ function DashCombined({ view, headerWidget = "stats" }) {
   const store = useNbStore(); // re-renders on every store change
   const allHW = React.useMemo(() => [...HOMEWORK, ...store.homework], [store.homework]);
   const allQuizzes = React.useMemo(() => [...QUIZZES_UPCOMING, ...nbGetQuizzes()], [store.homework]);
+
+  // Live clock — updates every minute
+  const [clockTick, setClockTick] = React.useState(0);
+  React.useEffect(() => {
+    const id = setInterval(() => setClockTick(t => t + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Recent notes — merge store + static, deduplicated
+  const dashRecentNotes = React.useMemo(() => {
+    const storeNotes = SUBJECTS.flatMap(sub =>
+      (store.notesFor ? store.notesFor(sub.id) : []).map(n => ({ ...n, subject: sub.id }))
+    );
+    const seen = new Set();
+    return [...storeNotes, ...RECENT_NOTES].filter(n => {
+      if (seen.has(n.id)) return false;
+      seen.add(n.id); return true;
+    }).slice(0, 3);
+  }, [store]);
+
   const now = new Date();
   const todayMidnight = new Date(now); todayMidnight.setHours(0, 0, 0, 0);
   const todayHW = allHW.filter((h) => {
@@ -633,7 +653,12 @@ function DashCombined({ view, headerWidget = "stats" }) {
   return (
     <>
       <PageHeader
-        eyebrow={(() => { const t = getTermInfo(); const wk = t.weekNum !== "—" ? ` · Week ${t.weekNum} of ${t.weekTotal}` : ""; return `${t.dayName} · ${t.shortDate} · ${t.termLabel}${wk}`; })()}
+        eyebrow={(() => {
+          const t = getTermInfo();
+          const wk = t.weekNum !== "—" ? ` · Week ${t.weekNum} of ${t.weekTotal}` : "";
+          const timeStr = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+          return `${t.dayName} · ${t.shortDate} · ${timeStr} · ${t.termLabel}${wk}`;
+        })()}
         title={greetingFor(new Date())}
         italic={`${getTermInfo().userName}.`}
         meta={headerMeta}
@@ -724,8 +749,8 @@ function DashCombined({ view, headerWidget = "stats" }) {
         // Right-side content: countdown or next-day summary
         const nextDayHW = allHW.filter(h => !h.done).slice(0, 2);
         return (
-          <div className="sn-card pg-section" style={{ display: "flex", gap: 18, alignItems: "stretch", marginBottom: 20, animationDelay: "0.25s" }}>
-            <div style={{ width: 6, borderRadius: 3, background: featuredColor }}></div>
+          <div className="sn-card pg-section" style={{ display: "flex", gap: 18, alignItems: "stretch", marginBottom: 20, animationDelay: "0.25s", background: `linear-gradient(135deg, ${featuredColor}0d 0%, var(--surface) 55%)`, borderLeft: `3px solid ${featuredColor}` }}>
+            <div style={{ width: 0 }}></div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)" }}>{eyebrow}</div>
               <h2 className="serif" style={{ fontFamily: "var(--f-display)", fontSize: 28, margin: "4px 0 4px", display: "flex", alignItems: "center", gap: 10 }}>
@@ -786,9 +811,12 @@ function DashCombined({ view, headerWidget = "stats" }) {
               <a className="mono" style={{ color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none", cursor: "pointer" }} onClick={() => window.location.hash = "#/homework"}>ALL HOMEWORK →</a>
             </h3>
             {todayHW.length === 0
-              ? <div style={{ padding: "12px 0 6px" }}>
-                  <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-2)", fontSize: 15, marginBottom: 3 }}>All clear today.</div>
-                  <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)" }}>Nothing due — you're ahead.</div>
+              ? <div style={{ padding: "14px 0 6px", display: "flex", alignItems: "center", gap: 14 }}>
+                  <div style={{ fontFamily: "var(--f-display)", fontSize: 32, lineHeight: 1, color: "var(--ink-3)", opacity: 0.2 }}>✓</div>
+                  <div>
+                    <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink)", fontSize: 16, marginBottom: 3 }}>All clear today.</div>
+                    <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)" }}>Nothing due — you're ahead.</div>
+                  </div>
                 </div>
               : <HomeworkList items={todayHW} compact />}
           </div>}
@@ -876,36 +904,29 @@ function DashCombined({ view, headerWidget = "stats" }) {
           </div>}
 
           {W("recent-notes") && <div className="sn-card">
-            <h3 className="sn-card-title"><span>Recent notes</span><a className="mono" onClick={() => window.location.hash = "#/notes"} style={{ color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none", cursor: "pointer" }}>OPEN →</a></h3>
+            <h3 className="sn-card-title"><span>Recent notes</span><a className="mono" onClick={() => window.location.hash = "#/notes"} style={{ color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none", cursor: "pointer" }}>ALL →</a></h3>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              {RECENT_NOTES.length === 0 && (() => {
-                const firstSubject = SUBJECTS[0];
+              {dashRecentNotes.length === 0 ? (
+                <div style={{ padding: "12px 0 6px", display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 15 }}>Nothing written yet.</div>
+                  <a onClick={() => window.location.hash = "#/notes"} style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", cursor: "pointer", textDecoration: "none", textTransform: "uppercase", letterSpacing: "0.08em" }}>Open notes to start →</a>
+                </div>
+              ) : dashRecentNotes.map((n, ni) => {
+                const sb = subjectBy(n.subject || n.subjectId);
+                if (!sb) return null;
                 return (
-                  <div style={{ padding: "10px 0 6px" }}>
-                    <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 14, marginBottom: 6 }}>No notes yet.</div>
-                    {firstSubject && (
-                      <a onClick={() => window.location.hash = "#/subject/" + firstSubject.id} style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--accent)", cursor: "pointer", textDecoration: "none" }}>
-                        Start with {firstSubject.short} →
-                      </a>
-                    )}
-                  </div>
-                );
-              })()}
-              {RECENT_NOTES.slice(0, 3).map((n, ni) => {
-                const sb = subjectBy(n.subject);
-                return (
-                  <div key={n.id} onClick={() => window.location.hash = "#/subject/" + n.subject + "/notes"}
-                    style={{ padding: "8px 0", borderBottom: ni < RECENT_NOTES.slice(0,3).length - 1 ? "1px solid var(--hairline)" : "none", cursor: "pointer", transition: "opacity .1s" }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = "0.72"}
+                  <div key={n.id} onClick={() => window.location.hash = "#/subject/" + (n.subject || n.subjectId) + "/notes"}
+                    style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 0",
+                      borderBottom: ni < dashRecentNotes.length - 1 ? "1px solid var(--hairline)" : "none",
+                      cursor: "pointer", transition: "opacity 0.13s" }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = "0.7"}
                     onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                      <span style={{ display: "inline-block", width: 5, height: 5, borderRadius: 1, background: sb.color, flexShrink: 0 }} />
-                      <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{sb.short}</span>
-                      <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", opacity: 0.5 }}>·</span>
-                      <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)" }}>{n.when}</span>
+                    <div style={{ width: 3, height: 36, borderRadius: 1.5, background: sb.color, flexShrink: 0, marginTop: 2 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: "var(--f-display)", fontSize: 14, lineHeight: 1.25, color: "var(--ink)", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.title}</div>
+                      <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{sb.short}{n.when ? " · " + n.when : ""}</div>
                     </div>
-                    <div style={{ fontFamily: "var(--f-display)", fontSize: 14, lineHeight: 1.25, color: "var(--ink)", marginBottom: 3 }}>{n.title}</div>
-                    <div style={{ fontSize: 11, color: "var(--ink-3)", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{n.excerpt}</div>
+                    <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", paddingTop: 2 }}>→</span>
                   </div>
                 );
               })}
