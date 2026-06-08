@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Julian's Notebook</title>
+<title>Scholar — Academic Notebook for Students</title>
+<meta name="description" content="Notes, homework, grades, and quizzes — all in one place. Built for students who take their studies seriously." />
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Notebook">
+<meta name="apple-mobile-web-app-title" content="Scholar">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1a1611">
+<meta name="theme-color" content="#0c0c0e">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,19 +18,701 @@
 <link rel="stylesheet" href="styles.css" />
 
 <style>
-  html, body { background: var(--bg); height: 100%; margin: 0; }
+  html, body { background: #0c0c0e; height: 100%; margin: 0; font-family: 'Geist', -apple-system, sans-serif; }
   #root { height: 100vh; }
-  #clerk-overlay {
+
+  /* ─── INITIAL LOADING SCREEN ─── */
+  #initial-screen {
     position: fixed; inset: 0; z-index: 9999;
-    background: #111; display: flex;
+    background: #0c0c0e;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.25s;
+  }
+  #initial-screen .is-mark {
+    width: 44px; height: 44px; border-radius: 11px;
+    background: linear-gradient(135deg, rgba(124,122,255,0.22) 0%, rgba(124,122,255,0.06) 100%);
+    border: 1px solid rgba(124,122,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #7c7aff;
+    animation: is-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes is-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+  /* ─── SIGN-IN MODAL OVERLAY ─── */
+  #clerk-overlay {
+    position: fixed; inset: 0; z-index: 10000;
+    background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(10px);
+    display: none;
     align-items: center; justify-content: center;
+  }
+  #clerk-overlay-close {
+    position: absolute; top: 20px; right: 24px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    color: rgba(255,255,255,0.5); border-radius: 8px;
+    width: 36px; height: 36px; cursor: pointer; font-size: 17px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; z-index: 1;
+  }
+  #clerk-overlay-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+  /* ─── LANDING PAGE ─── */
+  #landing {
+    position: fixed; inset: 0; z-index: 9000;
+    overflow-y: auto; overflow-x: hidden;
+    display: none;
+    background: #0c0c0e;
+    color: #e8e8ec;
+    scroll-behavior: smooth;
+  }
+  #landing.lp-visible { display: block; animation: lp-in 0.3s ease forwards; }
+  @keyframes lp-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+  /* Nav */
+  .lp-nav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 52px; height: 64px;
+    background: rgba(12,12,14,0.88);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255,255,255,0.055);
+  }
+  .lp-logo { display: flex; align-items: center; gap: 10px; }
+  .lp-logo-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, rgba(124,122,255,0.22) 0%, rgba(124,122,255,0.06) 100%);
+    border: 1px solid rgba(124,122,255,0.22);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #7c7aff;
+  }
+  .lp-logo-name { font-size: 15px; font-weight: 600; letter-spacing: -0.025em; color: #ebebef; }
+  .lp-nav-right { display: flex; align-items: center; gap: 10px; }
+  .lp-btn-ghost {
+    background: none; border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.65); padding: 7px 15px;
+    border-radius: 8px; font-size: 13px; font-family: 'Geist', sans-serif;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .lp-btn-ghost:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.18); color: #fff; }
+  .lp-btn-accent {
+    background: #7c7aff; border: none; color: #fff;
+    padding: 8px 18px; border-radius: 8px;
+    font-size: 13px; font-family: 'Geist', sans-serif; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .lp-btn-accent:hover { background: #918fff; transform: translateY(-1px); box-shadow: 0 4px 18px rgba(124,122,255,0.32); }
+
+  /* Hero */
+  .lp-hero {
+    position: relative; text-align: center;
+    padding: 96px 52px 72px;
+    overflow: hidden;
+  }
+  .lp-hero-glow {
+    position: absolute; top: -160px; left: 50%; transform: translateX(-50%);
+    width: 900px; height: 560px;
+    background: radial-gradient(ellipse at center, rgba(124,122,255,0.075) 0%, transparent 68%);
+    pointer-events: none;
+  }
+  .lp-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(124,122,255,0.09); border: 1px solid rgba(124,122,255,0.2);
+    border-radius: 20px; padding: 5px 14px;
+    font-size: 12px; color: rgba(146,144,255,0.9); letter-spacing: 0.02em;
+    margin-bottom: 32px;
+  }
+  .lp-badge-dot {
+    width: 6px; height: 6px; border-radius: 3px; background: #7c7aff;
+    animation: bdot 2.8s ease-in-out infinite;
+  }
+  @keyframes bdot { 0%,100%{opacity:1} 50%{opacity:0.25} }
+  .lp-h1 {
+    font-size: clamp(42px, 6.5vw, 76px);
+    font-weight: 600; letter-spacing: -0.04em; line-height: 1.04;
+    color: #f0f0f5; margin: 0 0 22px;
+    max-width: 820px; margin-left: auto; margin-right: auto;
+  }
+  .lp-h1 em {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-style: italic; font-weight: 400; color: #7c7aff;
+  }
+  .lp-sub {
+    font-size: clamp(15px, 1.8vw, 18px);
+    color: rgba(232,232,236,0.5); max-width: 500px;
+    margin: 0 auto 44px; line-height: 1.68;
+  }
+  .lp-ctas { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .lp-cta-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #7c7aff; color: #fff; padding: 13px 28px;
+    border-radius: 10px; font-size: 15px; font-family: 'Geist', sans-serif;
+    font-weight: 500; border: none; cursor: pointer; transition: all 0.2s;
+    letter-spacing: -0.01em;
+  }
+  .lp-cta-primary:hover { background: #918fff; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,122,255,0.38); }
+  .lp-cta-ghost {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(232,232,236,0.6); padding: 13px 28px;
+    border-radius: 10px; font-size: 15px; font-family: 'Geist', sans-serif;
+    cursor: pointer; transition: all 0.2s; text-decoration: none;
+  }
+  .lp-cta-ghost:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.17); color: #e8e8ec; }
+
+  /* Browser mockup */
+  .lp-mockup-wrap {
+    margin-top: 60px; position: relative;
+    max-width: 920px; margin-left: auto; margin-right: auto;
+  }
+  .lp-browser {
+    background: linear-gradient(180deg, rgba(255,255,255,0.035) 0%, transparent 100%), #141416;
+    border: 1px solid rgba(255,255,255,0.085);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 48px 130px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04), 0 0 80px rgba(124,122,255,0.055);
+  }
+  .lp-browser-bar {
+    display: flex; align-items: center; gap: 7px;
+    padding: 11px 16px; border-bottom: 1px solid rgba(255,255,255,0.055);
+    background: rgba(255,255,255,0.018);
+  }
+  .lp-brdot { width: 11px; height: 11px; border-radius: 50%; }
+  .lp-browser-url {
+    flex: 1; text-align: center; font-size: 11px;
+    color: rgba(255,255,255,0.18); font-family: 'Geist Mono', monospace;
+  }
+  .lp-browser-body { display: flex; height: 340px; }
+  .lp-app-sidebar {
+    width: 186px; border-right: 1px solid rgba(255,255,255,0.055);
+    padding: 14px 0; flex-shrink: 0;
+    background: #0f0f11;
+  }
+  .lp-app-sidebar-section {
+    font-size: 10px; color: rgba(255,255,255,0.2);
+    letter-spacing: 0.07em; text-transform: uppercase; font-weight: 500;
+    padding: 0 0 6px 18px; margin-top: 6px;
+  }
+  .lp-app-nav {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px 6px 12px; margin: 0 6px 1px;
+    border-radius: 6px; font-size: 12px;
+    color: rgba(255,255,255,0.28); cursor: default;
+  }
+  .lp-app-nav.on { background: rgba(124,122,255,0.12); color: #9290ff; }
+  .lp-app-nav-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .lp-app-content {
+    flex: 1; padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 10px; overflow: hidden;
+  }
+  .lp-app-heading { display: flex; align-items: baseline; justify-content: space-between; }
+  .lp-app-title { font-size: 13px; font-weight: 600; color: #f0f0f5; }
+  .lp-app-date { font-size: 10px; color: rgba(255,255,255,0.22); }
+  .lp-metrics { display: flex; gap: 8px; }
+  .lp-metric {
+    flex: 1; border-radius: 7px; padding: 10px 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), #141416;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .lp-metric-val { font-size: 18px; font-weight: 600; color: #f0f0f5; line-height: 1; }
+  .lp-metric-lbl { font-size: 9px; color: rgba(255,255,255,0.28); margin-top: 3px; }
+  .lp-hw-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), #141416;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 7px; padding: 10px 12px; flex: 1;
+  }
+  .lp-hw-head { font-size: 9px; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 8px; }
+  .lp-hw-row {
+    display: flex; align-items: center; gap: 7px;
+    padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.035);
+    font-size: 10px; color: rgba(255,255,255,0.42);
+  }
+  .lp-hw-row:last-child { border-bottom: none; }
+  .lp-hw-bar { width: 3px; height: 13px; border-radius: 2px; flex-shrink: 0; }
+  .lp-hw-badge { margin-left: auto; padding: 2px 6px; border-radius: 4px; font-size: 9px; }
+  .lp-bottom-row { display: flex; gap: 8px; }
+  .lp-ai-card {
+    flex: 1; background: linear-gradient(135deg, rgba(124,122,255,0.08) 0%, #141416 55%);
+    border: 1px solid rgba(124,122,255,0.16); border-radius: 7px; padding: 9px 11px;
+  }
+  .lp-ai-head { font-size: 9px; color: rgba(124,122,255,0.75); font-weight: 500; margin-bottom: 4px; }
+  .lp-ai-body { font-size: 10px; color: rgba(255,255,255,0.28); line-height: 1.5; }
+  .lp-stat-mini {
+    flex: 1; background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), #141416;
+    border: 1px solid rgba(255,255,255,0.07); border-radius: 7px; padding: 9px 11px;
+  }
+  .lp-stat-mini-lbl { font-size: 9px; color: rgba(255,255,255,0.25); margin-bottom: 4px; }
+  .lp-stat-mini-val { display: flex; align-items: center; gap: 5px; }
+  .lp-mockup-fade {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+    background: linear-gradient(transparent, #0c0c0e); pointer-events: none;
+  }
+
+  /* Features grid */
+  .lp-features { padding: 80px 52px; }
+  .lp-section-kicker {
+    text-align: center; font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #7c7aff; margin-bottom: 12px; font-weight: 500;
+  }
+  .lp-section-h2 {
+    text-align: center; font-size: clamp(26px, 4vw, 38px);
+    font-weight: 600; letter-spacing: -0.035em; color: #f0f0f5; margin: 0 0 12px;
+  }
+  .lp-section-h2 em {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-style: italic; font-weight: 400; color: rgba(232,232,236,0.55);
+  }
+  .lp-section-sub {
+    text-align: center; font-size: 15px;
+    color: rgba(232,232,236,0.42); max-width: 460px; margin: 0 auto 52px; line-height: 1.65;
+  }
+  .lp-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 14px; max-width: 1020px; margin: 0 auto;
+  }
+  .lp-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.022) 0%, transparent 100%), #141416;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px; padding: 26px;
+    transition: border-color 0.22s, transform 0.22s, box-shadow 0.22s;
+    position: relative; overflow: hidden;
+  }
+  .lp-card::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(124,122,255,0.28), transparent);
+    opacity: 0; transition: opacity 0.22s;
+  }
+  .lp-card:hover { border-color: rgba(124,122,255,0.22); transform: translateY(-3px); box-shadow: 0 14px 44px rgba(0,0,0,0.38); }
+  .lp-card:hover::after { opacity: 1; }
+  .lp-card.ai {
+    background: linear-gradient(135deg, rgba(124,122,255,0.06) 0%, rgba(20,20,22,0) 55%), linear-gradient(180deg, rgba(255,255,255,0.022) 0%, transparent 100%), #141416;
+    border-color: rgba(124,122,255,0.16);
+  }
+  .lp-card-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; margin-bottom: 16px;
+  }
+  .lp-card-title { font-size: 14px; font-weight: 600; color: #f0f0f5; letter-spacing: -0.02em; margin-bottom: 7px; }
+  .lp-card.ai .lp-card-title { color: #9290ff; }
+  .lp-card-desc { font-size: 13px; color: rgba(232,232,236,0.42); line-height: 1.65; }
+
+  /* Divider */
+  .lp-divider { max-width: 1020px; margin: 0 auto; border: none; border-top: 1px solid rgba(255,255,255,0.04); }
+
+  /* Detail rows */
+  .lp-detail {
+    max-width: 1020px; margin: 0 auto;
+    padding: 80px 52px;
+    display: flex; gap: 72px; align-items: center;
+  }
+  .lp-detail.rev { flex-direction: row-reverse; }
+  .lp-detail-copy { flex: 1; min-width: 260px; }
+  .lp-detail-chip {
+    font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
+    color: rgba(124,122,255,0.78); margin-bottom: 14px; font-weight: 500;
+    display: inline-block;
+  }
+  .lp-detail-h2 {
+    font-size: clamp(22px, 3vw, 32px); font-weight: 600; letter-spacing: -0.03em;
+    color: #f0f0f5; margin: 0 0 14px; line-height: 1.2;
+  }
+  .lp-detail-h2 em { font-family: 'Source Serif 4', Georgia, serif; font-style: italic; font-weight: 400; }
+  .lp-detail-p { font-size: 15px; color: rgba(232,232,236,0.46); line-height: 1.72; margin: 0 0 22px; }
+  .lp-points { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+  .lp-points li { display: flex; align-items: baseline; gap: 10px; font-size: 13px; color: rgba(232,232,236,0.56); }
+  .lp-points li::before { content: '\2192'; color: #7c7aff; flex-shrink: 0; }
+  .lp-detail-visual { flex: 1; min-width: 260px; }
+  .lp-panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), #141416;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 13px; padding: 20px;
+    box-shadow: 0 22px 65px rgba(0,0,0,0.42);
+  }
+  .lp-panel-head { font-size: 10px; color: rgba(255,255,255,0.28); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 14px; }
+
+  /* Stats strip */
+  .lp-stats-strip {
+    border-top: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    padding: 52px;
+    display: flex; align-items: stretch; justify-content: center;
+  }
+  .lp-stats-inner { display: flex; max-width: 760px; width: 100%; }
+  .lp-stat { flex: 1; text-align: center; padding: 0 32px; }
+  .lp-stat + .lp-stat { border-left: 1px solid rgba(255,255,255,0.055); }
+  .lp-stat-val {
+    font-size: 30px; font-weight: 600; letter-spacing: -0.04em; color: #f0f0f5;
+    font-family: 'Source Serif 4', Georgia, serif;
+  }
+  .lp-stat-lbl { font-size: 12px; color: rgba(232,232,236,0.35); margin-top: 4px; }
+
+  /* Final CTA */
+  .lp-cta-section {
+    text-align: center; padding: 96px 52px;
+    position: relative; overflow: hidden;
+  }
+  .lp-cta-glow {
+    position: absolute; bottom: -180px; left: 50%; transform: translateX(-50%);
+    width: 700px; height: 500px;
+    background: radial-gradient(ellipse at center, rgba(124,122,255,0.065) 0%, transparent 68%);
+    pointer-events: none;
+  }
+  .lp-cta-h2 {
+    font-size: clamp(34px, 5.5vw, 58px); font-weight: 600; letter-spacing: -0.04em;
+    color: #f0f0f5; margin: 0 0 14px;
+  }
+  .lp-cta-h2 em { font-family: 'Source Serif 4', Georgia, serif; font-style: italic; font-weight: 400; color: #7c7aff; }
+  .lp-cta-note { font-size: 14px; color: rgba(232,232,236,0.38); margin: 0 0 38px; }
+
+  /* Footer */
+  .lp-footer {
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding: 32px 52px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .lp-footer-brand { display: flex; align-items: center; gap: 8px; }
+  .lp-footer-mark {
+    width: 24px; height: 24px; border-radius: 6px;
+    background: rgba(124,122,255,0.1); border: 1px solid rgba(124,122,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #7c7aff;
+  }
+  .lp-footer-copy { font-size: 12px; color: rgba(232,232,236,0.22); }
+  .lp-footer-links { display: flex; gap: 22px; }
+  .lp-footer-links a { font-size: 12px; color: rgba(232,232,236,0.28); text-decoration: none; transition: color 0.15s; }
+  .lp-footer-links a:hover { color: rgba(232,232,236,0.7); }
+
+  /* Responsive */
+  @media (max-width: 820px) {
+    .lp-nav { padding: 0 22px; }
+    .lp-hero { padding: 80px 22px 56px; }
+    .lp-features { padding: 60px 22px; }
+    .lp-grid { grid-template-columns: 1fr 1fr; }
+    .lp-detail, .lp-detail.rev { flex-direction: column !important; padding: 60px 22px; gap: 40px; }
+    .lp-detail-visual { width: 100%; }
+    .lp-stats-strip { padding: 40px 22px; }
+    .lp-cta-section { padding: 80px 22px; }
+    .lp-footer { flex-direction: column; gap: 18px; padding: 28px 22px; text-align: center; }
+    .lp-browser-body { height: 280px; }
+    .lp-app-sidebar { width: 150px; }
+  }
+  @media (max-width: 520px) {
+    .lp-grid { grid-template-columns: 1fr; }
+    .lp-stats-inner { flex-direction: column; gap: 28px; }
+    .lp-stat + .lp-stat { border-left: none; border-top: 1px solid rgba(255,255,255,0.055); padding-top: 28px; }
+    .lp-browser-body { height: 220px; }
+    .lp-app-sidebar { display: none; }
+    .lp-h1 { font-size: 38px; }
   }
 </style>
 </head>
-<body style="font-family: &quot;Times New Roman&quot;">
+<body>
+
+<!-- ─── INITIAL LOADING SCREEN ─── -->
+<div id="initial-screen">
+  <div class="is-mark">&#10022;</div>
+</div>
+
+<!-- ─── LANDING PAGE ─── -->
+<div id="landing">
+
+  <!-- Nav -->
+  <nav class="lp-nav">
+    <div class="lp-logo">
+      <div class="lp-logo-mark">&#10022;</div>
+      <span class="lp-logo-name">Scholar</span>
+    </div>
+    <div class="lp-nav-right">
+      <button class="lp-btn-ghost" onclick="window.openSignIn()">Sign in</button>
+      <button class="lp-btn-accent" onclick="window.openSignIn()">Get started &rarr;</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="lp-hero">
+    <div class="lp-hero-glow"></div>
+    <div class="lp-badge">
+      <div class="lp-badge-dot"></div>
+      AI-powered academic notebook
+    </div>
+    <h1 class="lp-h1">Your academic life,<br><em>organized.</em></h1>
+    <p class="lp-sub">Notes, homework, grades, and quizzes &mdash; all in one place. Built for students who take their studies seriously.</p>
+    <div class="lp-ctas">
+      <button class="lp-cta-primary" onclick="window.openSignIn()">
+        Get started free
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button class="lp-cta-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+        See features &darr;
+      </button>
+    </div>
+
+    <!-- Browser mockup -->
+    <div class="lp-mockup-wrap">
+      <div class="lp-browser">
+        <div class="lp-browser-bar">
+          <div class="lp-brdot" style="background:#ff5f57"></div>
+          <div class="lp-brdot" style="background:#ffbd2e"></div>
+          <div class="lp-brdot" style="background:#28c840"></div>
+          <div class="lp-browser-url">scholar-is.live</div>
+        </div>
+        <div class="lp-browser-body">
+          <div class="lp-app-sidebar">
+            <div class="lp-app-sidebar-section">Academic</div>
+            <div class="lp-app-nav on"><span style="font-size:12px;opacity:0.9">&#9672;</span> Dashboard</div>
+            <div class="lp-app-nav"><span style="font-size:12px">&#9643;</span> Homework</div>
+            <div class="lp-app-nav"><span style="font-size:12px">&#9673;</span> Grades</div>
+            <div class="lp-app-nav"><span style="font-size:12px">&#9678;</span> Quizzes</div>
+            <div class="lp-app-sidebar-section" style="margin-top:10px">Subjects</div>
+            <div class="lp-app-nav"><div class="lp-app-nav-dot" style="background:#7c7aff"></div> Mathematics</div>
+            <div class="lp-app-nav"><div class="lp-app-nav-dot" style="background:#4ade80"></div> Biology</div>
+            <div class="lp-app-nav"><div class="lp-app-nav-dot" style="background:#f59e0b"></div> Literature</div>
+          </div>
+          <div class="lp-app-content">
+            <div class="lp-app-heading">
+              <div class="lp-app-title">Good morning, Julian</div>
+              <div class="lp-app-date">Monday, Jun 9</div>
+            </div>
+            <div class="lp-metrics">
+              <div class="lp-metric" style="border-left:3px solid #7c7aff;background:linear-gradient(135deg,rgba(124,122,255,0.1) 0%,#141416 55%)">
+                <div class="lp-metric-val">3.8</div>
+                <div class="lp-metric-lbl">Current GPA</div>
+              </div>
+              <div class="lp-metric" style="border-left:3px solid #4ade80;background:linear-gradient(135deg,rgba(74,222,128,0.1) 0%,#141416 55%)">
+                <div class="lp-metric-val">12</div>
+                <div class="lp-metric-lbl">Day streak &#128293;</div>
+              </div>
+              <div class="lp-metric" style="border-left:3px solid #f59e0b;background:linear-gradient(135deg,rgba(245,158,11,0.1) 0%,#141416 55%)">
+                <div class="lp-metric-val">4</div>
+                <div class="lp-metric-lbl">Due this week</div>
+              </div>
+            </div>
+            <div class="lp-hw-card">
+              <div class="lp-hw-head">Today's assignments</div>
+              <div class="lp-hw-row">
+                <div class="lp-hw-bar" style="background:#7c7aff"></div>
+                Calculus Problem Set 4
+                <div class="lp-hw-badge" style="background:rgba(255,80,80,0.14);color:rgba(255,110,110,0.85)">Today</div>
+              </div>
+              <div class="lp-hw-row">
+                <div class="lp-hw-bar" style="background:#4ade80"></div>
+                Biology Lab Report Draft
+                <div class="lp-hw-badge" style="background:rgba(245,158,11,0.12);color:rgba(245,158,11,0.72)">Wed</div>
+              </div>
+              <div class="lp-hw-row">
+                <div class="lp-hw-bar" style="background:#f59e0b"></div>
+                Essay: Heart of Darkness
+                <div class="lp-hw-badge" style="background:rgba(124,122,255,0.12);color:rgba(124,122,255,0.75)">Fri</div>
+              </div>
+            </div>
+            <div class="lp-bottom-row">
+              <div class="lp-ai-card">
+                <div class="lp-ai-head">&#10022; AI Study Guide</div>
+                <div class="lp-ai-body">Limits &amp; Derivatives<br>3 key concepts ready &rarr;</div>
+              </div>
+              <div class="lp-stat-mini">
+                <div class="lp-stat-mini-lbl">Quiz average</div>
+                <div class="lp-stat-mini-val">
+                  <span style="font-size:19px;font-weight:600;color:#f0f0f5;letter-spacing:-0.03em">87%</span>
+                  <span style="font-size:10px;color:rgba(74,222,128,0.75)">&uarr; 5%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="lp-mockup-fade"></div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="lp-features">
+    <div class="lp-section-kicker">Everything you need</div>
+    <h2 class="lp-section-h2">Built for serious students,<br><em>not for everyone</em></h2>
+    <p class="lp-section-sub">Every feature is designed around how students actually study &mdash; not how productivity apps think they do.</p>
+    <div class="lp-grid">
+      <div class="lp-card">
+        <div class="lp-card-icon" style="background:rgba(124,122,255,0.12);color:#7c7aff">&#9672;</div>
+        <div class="lp-card-title">Smart Dashboard</div>
+        <div class="lp-card-desc">Your academic day at a glance. Upcoming deadlines, study streak, grade overview, and weekly schedule &mdash; all on one screen.</div>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-icon" style="background:rgba(99,179,237,0.12);color:#63b3ed">&#9643;</div>
+        <div class="lp-card-title">Notes</div>
+        <div class="lp-card-desc">Rich per-subject notes with block-based editing. AI-powered knowledge tools to generate summaries and find connections between concepts.</div>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-icon" style="background:rgba(74,222,128,0.12);color:#4ade80">&#9673;</div>
+        <div class="lp-card-title">Homework Tracker</div>
+        <div class="lp-card-desc">Visual kanban board for every assignment. Color-coded by subject, sorted by urgency. Never lose track of a deadline again.</div>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-icon" style="background:rgba(245,158,11,0.12);color:#f59e0b">&#9671;</div>
+        <div class="lp-card-title">Grade Tracker</div>
+        <div class="lp-card-desc">Track every assignment grade, see your GPA trend, and run what-if analysis before it's too late to change your grade.</div>
+      </div>
+      <div class="lp-card">
+        <div class="lp-card-icon" style="background:rgba(251,113,133,0.12);color:#fb7185">&#9678;</div>
+        <div class="lp-card-title">Quizzes &amp; Flashcards</div>
+        <div class="lp-card-desc">Built-in quiz engine with multiple choice, flashcard decks, and AI-generated practice questions from your own notes.</div>
+      </div>
+      <div class="lp-card ai">
+        <div class="lp-card-icon" style="background:rgba(124,122,255,0.15);color:#9290ff">&#10022;</div>
+        <div class="lp-card-title">AI Integration</div>
+        <div class="lp-card-desc">Connect Claude AI for personalized study guides, note summaries, concept explanations, and quiz generation &mdash; all powered by your own content.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="lp-divider">
+
+  <!-- Detail — Homework -->
+  <section class="lp-detail">
+    <div class="lp-detail-copy">
+      <div class="lp-detail-chip">Homework</div>
+      <h2 class="lp-detail-h2">Stay on top of <em>every deadline</em></h2>
+      <p class="lp-detail-p">A visual kanban board gives you a clear picture of everything on your plate. No more forgotten assignments or last-minute panic.</p>
+      <ul class="lp-points">
+        <li>Kanban view with Todo, In Progress, and Done columns</li>
+        <li>Per-subject color coding with urgency badges</li>
+        <li>AI-powered Focus panel highlights what needs attention now</li>
+        <li>Quick-add from anywhere in the app with Ctrl+N</li>
+      </ul>
+    </div>
+    <div class="lp-detail-visual">
+      <div class="lp-panel">
+        <div class="lp-panel-head">This week</div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1">
+            <div style="font-size:10px;color:rgba(255,255,255,0.22);text-align:center;padding:4px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:7px">TODO</div>
+            <div style="background:linear-gradient(135deg,rgba(124,122,255,0.1) 0%,#141416 55%);border:1px solid rgba(124,122,255,0.18);border-radius:7px;padding:9px 10px;margin-bottom:6px;font-size:11px;color:rgba(255,255,255,0.58)">
+              <div style="font-weight:500;margin-bottom:3px">Calc PS4</div>
+              <div style="font-size:10px;color:rgba(255,100,100,0.75)">Due today</div>
+            </div>
+            <div style="background:linear-gradient(135deg,rgba(74,222,128,0.08) 0%,#141416 55%);border:1px solid rgba(74,222,128,0.15);border-radius:7px;padding:9px 10px;font-size:11px;color:rgba(255,255,255,0.58)">
+              <div style="font-weight:500;margin-bottom:3px">Bio Lab Report</div>
+              <div style="font-size:10px;color:rgba(245,158,11,0.75)">Due Wed</div>
+            </div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:10px;color:rgba(255,255,255,0.22);text-align:center;padding:4px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:7px">IN PROGRESS</div>
+            <div style="background:linear-gradient(135deg,rgba(245,158,11,0.08) 0%,#141416 55%);border:1px solid rgba(245,158,11,0.14);border-radius:7px;padding:9px 10px;font-size:11px;color:rgba(255,255,255,0.58)">
+              <div style="font-weight:500;margin-bottom:3px">Essay Draft</div>
+              <div style="font-size:10px;color:rgba(124,122,255,0.75)">Due Fri</div>
+            </div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:10px;color:rgba(255,255,255,0.22);text-align:center;padding:4px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:7px">DONE</div>
+            <div style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.1);border-radius:7px;padding:9px 10px;font-size:11px;color:rgba(255,255,255,0.3)">
+              <div style="font-weight:500;margin-bottom:3px;text-decoration:line-through">History Reading</div>
+              <div style="font-size:10px;color:rgba(74,222,128,0.55)">&#10003; Done</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="lp-divider">
+
+  <!-- Detail — Grades -->
+  <section class="lp-detail rev">
+    <div class="lp-detail-copy">
+      <div class="lp-detail-chip">Grades</div>
+      <h2 class="lp-detail-h2">Understand how you're <em>really doing</em></h2>
+      <p class="lp-detail-p">More than storing grades. See your GPA trend over time, run what-if scenarios before exams, and know exactly which subjects need more work.</p>
+      <ul class="lp-points">
+        <li>Live GPA calculation with per-subject breakdown</li>
+        <li>Grade trend visualization over the semester</li>
+        <li>What-if calculator &mdash; "What do I need on the final?"</li>
+        <li>Import grades from PDF transcripts</li>
+      </ul>
+    </div>
+    <div class="lp-detail-visual">
+      <div class="lp-panel">
+        <div class="lp-panel-head">Grade summary</div>
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <div style="flex:1;background:linear-gradient(135deg,rgba(124,122,255,0.1) 0%,#141416 55%);border:1px solid rgba(124,122,255,0.2);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:26px;font-weight:600;color:#f0f0f5;letter-spacing:-0.04em">3.8</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.28);margin-top:2px">Current GPA</div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <div style="background:linear-gradient(135deg,rgba(74,222,128,0.08) 0%,#141416 55%);border:1px solid rgba(74,222,128,0.15);border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:11px;color:rgba(255,255,255,0.48)">Math</span>
+              <span style="font-size:12px;font-weight:600;color:#4ade80">A</span>
+            </div>
+            <div style="background:linear-gradient(135deg,rgba(99,179,237,0.08) 0%,#141416 55%);border:1px solid rgba(99,179,237,0.14);border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:11px;color:rgba(255,255,255,0.48)">Biology</span>
+              <span style="font-size:12px;font-weight:600;color:#63b3ed">B+</span>
+            </div>
+            <div style="background:linear-gradient(135deg,rgba(245,158,11,0.08) 0%,#141416 55%);border:1px solid rgba(245,158,11,0.14);border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:11px;color:rgba(255,255,255,0.48)">Literature</span>
+              <span style="font-size:12px;font-weight:600;color:#f59e0b">B</span>
+            </div>
+          </div>
+        </div>
+        <div style="background:rgba(124,122,255,0.06);border:1px solid rgba(124,122,255,0.12);border-radius:8px;padding:11px 13px">
+          <div style="font-size:10px;color:rgba(124,122,255,0.78);font-weight:500;margin-bottom:4px">&#10022; What-if analysis</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.38);line-height:1.55">Need 91% on your Bio final to hit an A&minus;. You've got this.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats strip -->
+  <div class="lp-stats-strip">
+    <div class="lp-stats-inner">
+      <div class="lp-stat">
+        <div class="lp-stat-val">6+</div>
+        <div class="lp-stat-lbl">Core modules</div>
+      </div>
+      <div class="lp-stat">
+        <div class="lp-stat-val">&infin;</div>
+        <div class="lp-stat-lbl">Subjects supported</div>
+      </div>
+      <div class="lp-stat">
+        <div class="lp-stat-val">&#10022;</div>
+        <div class="lp-stat-lbl">AI-powered</div>
+      </div>
+      <div class="lp-stat">
+        <div class="lp-stat-val">Free</div>
+        <div class="lp-stat-lbl">Always, for students</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final CTA -->
+  <section class="lp-cta-section">
+    <div class="lp-cta-glow"></div>
+    <h2 class="lp-cta-h2">Start your semester <em>right.</em></h2>
+    <p class="lp-cta-note">Free for students. No credit card needed.</p>
+    <button class="lp-cta-primary" onclick="window.openSignIn()" style="font-size:15px;padding:14px 34px">
+      Get started free &rarr;
+    </button>
+  </section>
+
+  <!-- Footer -->
+  <footer class="lp-footer">
+    <div class="lp-footer-brand">
+      <div class="lp-footer-mark">&#10022;</div>
+      <span class="lp-footer-copy">Scholar &mdash; academic notebook</span>
+    </div>
+    <div class="lp-footer-links">
+      <a href="#" onclick="window.openSignIn();return false">Sign in</a>
+      <a href="mailto:hello@scholar-is.live">Contact</a>
+    </div>
+  </footer>
+
+</div><!-- /landing -->
+
+<!-- ─── SIGN-IN MODAL ─── -->
 <div id="clerk-overlay">
+  <button id="clerk-overlay-close" onclick="window.closeSignIn()" title="Close">&#10005;</button>
   <div id="clerk-sign-in-mount"></div>
 </div>
+
+<!-- ─── APP ─── -->
 <div id="root"></div>
 
 <!-- Clerk -->
@@ -41,28 +724,64 @@
   type="text/javascript"
 ></script>
 <script>
-  window.__clerkReady = new Promise(resolve => {
-    window.addEventListener('load', async () => {
+  var __clerkMounted = false;
+
+  window.openSignIn = function() {
+    var overlay = document.getElementById('clerk-overlay');
+    overlay.style.display = 'flex';
+    if (!__clerkMounted && window.Clerk) {
+      __clerkMounted = true;
+      window.Clerk.mountSignIn(document.getElementById('clerk-sign-in-mount'), {
+        fallbackRedirectUrl: '/',
+      });
+    }
+  };
+
+  window.closeSignIn = function() {
+    document.getElementById('clerk-overlay').style.display = 'none';
+  };
+
+  function hideSplash() {
+    var el = document.getElementById('initial-screen');
+    el.style.opacity = '0';
+    setTimeout(function() { el.style.display = 'none'; }, 260);
+  }
+
+  // Hide root until auth resolves
+  document.getElementById('root').style.display = 'none';
+
+  window.__clerkReady = new Promise(function(resolve) {
+    window.addEventListener('load', async function() {
       try {
         await window.Clerk.load();
         window.__clerk = window.Clerk;
+
         if (window.Clerk.user) {
-          document.getElementById('clerk-overlay').style.display = 'none';
+          // Already signed in — reveal the app
+          hideSplash();
+          document.getElementById('root').style.display = '';
           resolve(window.Clerk.user);
         } else {
-          window.Clerk.mountSignIn(document.getElementById('clerk-sign-in-mount'), {
-            fallbackRedirectUrl: '/',
-          });
-          window.Clerk.addListener(({ user }) => {
-            if (user) {
+          // Not signed in — show landing page
+          hideSplash();
+          var lp = document.getElementById('landing');
+          lp.style.display = 'block';
+          requestAnimationFrame(function() { lp.classList.add('lp-visible'); });
+
+          window.Clerk.addListener(function(state) {
+            if (state.user) {
+              document.getElementById('landing').style.display = 'none';
+              document.getElementById('landing').classList.remove('lp-visible');
               document.getElementById('clerk-overlay').style.display = 'none';
-              resolve(user);
+              document.getElementById('root').style.display = '';
+              resolve(state.user);
             }
           });
         }
       } catch(e) {
         console.warn('Clerk init failed:', e);
-        document.getElementById('clerk-overlay').style.display = 'none';
+        hideSplash();
+        document.getElementById('root').style.display = '';
         resolve(null);
       }
     });
@@ -128,27 +847,23 @@ function App() {
 
   const handleOnboardingComplete = (p) => {
     setProfile(p);
-    // Push profile to Firebase immediately so other devices get it right away
     if (window.nbSyncNow) window.nbSyncNow();
-    // Reload so SUBJECTS re-evaluates from localStorage
     window.location.reload();
   };
   const [cmdkOpen, setCmdkOpen] = React.useState(false);
-  const [quickAdd, setQuickAdd] = React.useState(null); // null | "homework" | "note" | ...
+  const [quickAdd, setQuickAdd] = React.useState(null);
   const [aiOpen, setAiOpen] = React.useState(false);
   const [scheduleEditorOpen, setScheduleEditorOpen] = React.useState(false);
   const [manageSubjectsOpen, setManageSubjectsOpen] = React.useState(false);
   const [apiKeyOpen, setApiKeyOpen] = React.useState(false);
   const [hasApiKey, setHasApiKey] = React.useState(() => !!nbGetApiKey());
 
-  // Load cloud data once Clerk is ready
   React.useEffect(() => {
     window.__clerkReady.then(() => {
       if (window.nbLoadFromCloud) window.nbLoadFromCloud();
     });
   }, []);
 
-  // When cloud loads profile data, reload so data.jsx picks it up fresh
   React.useEffect(() => {
     const onLoaded = (e) => {
       if ((e.detail.hasCloudProfile && !profile) || e.detail.profileChanged) {
@@ -171,8 +886,6 @@ function App() {
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
-
-
 
   React.useEffect(() => {
     const onKey = (e) => {
@@ -227,7 +940,6 @@ function App() {
     }
   };
 
-  // Compute sidebar active key from current route
   let sidebarActive = "dashboard";
   if (route.view === "subject") sidebarActive = route.id;
   else if (route.view === "homework") sidebarActive = "homework";
@@ -239,11 +951,9 @@ function App() {
   else if (route.view === "tools") sidebarActive = "tools";
   else if (route.view === "subjects") sidebarActive = "";
 
-  // Decide if content area needs special styling (note editor takes over the area)
   const isNote = route.view === "subject" && route.sub === "notes";
   const isQuiz = route.view === "quiz";
 
-  // Per-subject accent tint when viewing a subject
   const subjectAccent = route.view === "subject" && route.id ? (subjectBy(route.id)?.color) : null;
   const effectiveAccent = subjectAccent || tweaks.accent;
 
@@ -256,7 +966,6 @@ function App() {
     }
   `;
 
-  // Get the note text for the AI helper (when in notes view)
   const noteForAI = React.useMemo(() => {
     if (!isNote) return { title: "", text: "", subject: "" };
     const subj = subjectBy(route.id);
@@ -276,7 +985,6 @@ function App() {
     );
   }
 
-  // Mobile layout for phones
   if (window.innerWidth < 768) {
     return (
       <>
@@ -385,7 +1093,6 @@ function App() {
             options={["#c8694a", "#3f7d8a", "#7a4e6e", "#6b8e5a"]}
           />
         </TweakSection>
-
         <TweakSection label="Typography">
           <TweakRadio
             label="Display font"
@@ -398,7 +1105,6 @@ function App() {
             ]}
           />
         </TweakSection>
-
         <TweakSection label="Layout">
           <TweakRadio
             label="Density"
@@ -420,7 +1126,6 @@ function App() {
             ]}
           />
         </TweakSection>
-
         <TweakSection label="Home screen">
           <TweakRadio
             label="Variant"
@@ -503,12 +1208,11 @@ function NotFound({ go }) {
     <div style={{ textAlign: "center", padding: "80px 0" }}>
       <div style={{ fontFamily: "var(--f-display)", fontSize: 64, color: "var(--ink-3)" }}>404</div>
       <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 22, color: "var(--ink-2)", marginTop: 8 }}>That page isn't in this notebook.</div>
-      <button className="sn-btn primary" style={{ marginTop: 24 }} onClick={() => go("dashboard")}>← Back to today</button>
+      <button className="sn-btn primary" style={{ marginTop: 24 }} onClick={() => go("dashboard")}>&#8592; Back to today</button>
     </div>
   );
 }
 
-// --- color helpers ---
 function hexAlpha(hex, a) {
   const { r, g, b } = parseHex(hex);
   return `rgba(${r},${g},${b},${a})`;
