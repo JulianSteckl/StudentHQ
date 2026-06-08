@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Scholar — Academic Notebook for Students</title>
 <meta name="description" content="Notes, homework, grades, and quizzes — all in one place. Built for students who take their studies seriously." />
+<meta property="og:title" content="Scholar — Academic Notebook for Students" />
+<meta property="og:description" content="Notes, homework, grades, and quizzes — all in one place." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://scholar-is.live" />
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Scholar">
@@ -14,71 +18,71 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-
 <link rel="stylesheet" href="styles.css" />
 
 <style>
-  html, body { background: #0c0c0e; height: 100%; margin: 0; font-family: 'Geist', -apple-system, sans-serif; }
+  html, body { background: #0c0c0e; height: 100%; margin: 0; font-family: 'Geist', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
   #root { height: 100vh; }
 
-  /* ─── INITIAL LOADING SCREEN ─── */
+  /* ─── INITIAL SCREEN ─── */
   #initial-screen {
     position: fixed; inset: 0; z-index: 9999;
     background: #0c0c0e;
     display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.25s;
+    transition: opacity 0.3s;
   }
-  #initial-screen .is-mark {
-    width: 44px; height: 44px; border-radius: 11px;
-    background: linear-gradient(135deg, rgba(124,122,255,0.22) 0%, rgba(124,122,255,0.06) 100%);
-    border: 1px solid rgba(124,122,255,0.25);
+  .is-mark {
+    width: 46px; height: 46px; border-radius: 12px;
+    background: linear-gradient(135deg, rgba(124,122,255,0.2) 0%, rgba(124,122,255,0.06) 100%);
+    border: 1px solid rgba(124,122,255,0.24);
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px; color: #7c7aff;
+    font-size: 21px; color: #7c7aff;
     animation: is-pulse 1.8s ease-in-out infinite;
   }
-  @keyframes is-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+  @keyframes is-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-  /* ─── SIGN-IN MODAL OVERLAY ─── */
+  /* ─── SIGN-IN MODAL ─── */
   #clerk-overlay {
     position: fixed; inset: 0; z-index: 10000;
-    background: rgba(0,0,0,0.72);
-    backdrop-filter: blur(10px);
-    display: none;
-    align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(12px);
+    display: none; align-items: center; justify-content: center;
   }
   #clerk-overlay-close {
-    position: absolute; top: 20px; right: 24px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.09);
-    color: rgba(255,255,255,0.5); border-radius: 8px;
-    width: 36px; height: 36px; cursor: pointer; font-size: 17px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s; z-index: 1;
+    position: absolute; top: 22px; right: 26px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+    color: rgba(255,255,255,0.45); border-radius: 8px;
+    width: 36px; height: 36px; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s;
   }
   #clerk-overlay-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
 
-  /* ─── LANDING PAGE ─── */
+  /* ─── LANDING BASE ─── */
   #landing {
     position: fixed; inset: 0; z-index: 9000;
     overflow-y: auto; overflow-x: hidden;
-    display: none;
-    background: #0c0c0e;
-    color: #e8e8ec;
-    scroll-behavior: smooth;
+    display: none; background: #0c0c0e; color: #e8e8ec;
+    font-feature-settings: "ss01","cv11";
   }
-  #landing.lp-visible { display: block; animation: lp-in 0.3s ease forwards; }
-  @keyframes lp-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+  #landing.lp-show { display: block; animation: lp-enter 0.35s ease forwards; }
+  @keyframes lp-enter { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
 
-  /* Nav */
+  /* scroll reveal */
+  .lp-reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .lp-reveal.lp-in { opacity: 1; transform: none; }
+  .lp-reveal-delay-1 { transition-delay: 0.08s; }
+  .lp-reveal-delay-2 { transition-delay: 0.16s; }
+  .lp-reveal-delay-3 { transition-delay: 0.24s; }
+
+  /* ─── NAV ─── */
   .lp-nav {
     position: sticky; top: 0; z-index: 50;
+    height: 62px; padding: 0 52px;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 52px; height: 64px;
-    background: rgba(12,12,14,0.88);
-    backdrop-filter: blur(14px);
-    border-bottom: 1px solid rgba(255,255,255,0.055);
+    background: rgba(12,12,14,0.85); backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
   }
-  .lp-logo { display: flex; align-items: center; gap: 10px; }
+  .lp-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
   .lp-logo-mark {
     width: 30px; height: 30px; border-radius: 8px;
     background: linear-gradient(135deg, rgba(124,122,255,0.22) 0%, rgba(124,122,255,0.06) 100%);
@@ -87,6 +91,13 @@
     font-size: 14px; color: #7c7aff;
   }
   .lp-logo-name { font-size: 15px; font-weight: 600; letter-spacing: -0.025em; color: #ebebef; }
+  .lp-nav-links { display: flex; align-items: center; gap: 2px; }
+  .lp-nav-link {
+    padding: 6px 13px; border-radius: 7px; font-size: 13px;
+    color: rgba(255,255,255,0.5); background: none; border: none;
+    cursor: pointer; transition: all 0.15s; font-family: 'Geist', sans-serif;
+  }
+  .lp-nav-link:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
   .lp-nav-right { display: flex; align-items: center; gap: 10px; }
   .lp-btn-ghost {
     background: none; border: 1px solid rgba(255,255,255,0.1);
@@ -99,39 +110,61 @@
     background: #7c7aff; border: none; color: #fff;
     padding: 8px 18px; border-radius: 8px;
     font-size: 13px; font-family: 'Geist', sans-serif; font-weight: 500;
-    cursor: pointer; transition: all 0.15s;
+    cursor: pointer; transition: all 0.18s;
   }
-  .lp-btn-accent:hover { background: #918fff; transform: translateY(-1px); box-shadow: 0 4px 18px rgba(124,122,255,0.32); }
+  .lp-btn-accent:hover { background: #918fff; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(124,122,255,0.35); }
 
-  /* Hero */
+  /* ─── HERO ─── */
   .lp-hero {
     position: relative; text-align: center;
-    padding: 96px 52px 72px;
-    overflow: hidden;
+    padding: 96px 52px 0; overflow: hidden;
   }
-  .lp-hero-glow {
-    position: absolute; top: -160px; left: 50%; transform: translateX(-50%);
-    width: 900px; height: 560px;
-    background: radial-gradient(ellipse at center, rgba(124,122,255,0.075) 0%, transparent 68%);
+  /* dot grid */
+  .lp-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.028) 1px, transparent 1px);
+    background-size: 26px 26px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
     pointer-events: none;
   }
+  .lp-hero-glow-1 {
+    position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+    width: 1000px; height: 600px;
+    background: radial-gradient(ellipse at center, rgba(124,122,255,0.1) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .lp-hero-glow-2 {
+    position: absolute; top: 0; left: 10%;
+    width: 400px; height: 400px;
+    background: radial-gradient(ellipse at center, rgba(74,222,128,0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .lp-hero-glow-3 {
+    position: absolute; top: 100px; right: 8%;
+    width: 350px; height: 350px;
+    background: radial-gradient(ellipse at center, rgba(245,158,11,0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .lp-hero-inner { position: relative; z-index: 1; }
   .lp-badge {
     display: inline-flex; align-items: center; gap: 8px;
     background: rgba(124,122,255,0.09); border: 1px solid rgba(124,122,255,0.2);
-    border-radius: 20px; padding: 5px 14px;
-    font-size: 12px; color: rgba(146,144,255,0.9); letter-spacing: 0.02em;
+    border-radius: 20px; padding: 5px 14px 5px 10px;
+    font-size: 12px; color: rgba(146,144,255,0.9); letter-spacing: 0.015em;
     margin-bottom: 32px;
   }
-  .lp-badge-dot {
-    width: 6px; height: 6px; border-radius: 3px; background: #7c7aff;
-    animation: bdot 2.8s ease-in-out infinite;
+  .lp-badge-icon {
+    width: 20px; height: 20px; border-radius: 5px;
+    background: rgba(124,122,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #9290ff;
   }
-  @keyframes bdot { 0%,100%{opacity:1} 50%{opacity:0.25} }
   .lp-h1 {
-    font-size: clamp(42px, 6.5vw, 76px);
-    font-weight: 600; letter-spacing: -0.04em; line-height: 1.04;
-    color: #f0f0f5; margin: 0 0 22px;
-    max-width: 820px; margin-left: auto; margin-right: auto;
+    font-size: clamp(44px, 6.8vw, 80px);
+    font-weight: 600; letter-spacing: -0.045em; line-height: 1.02;
+    color: #f0f0f4; margin: 0 0 22px;
+    max-width: 840px; margin-left: auto; margin-right: auto;
   }
   .lp-h1 em {
     font-family: 'Source Serif 4', Georgia, serif;
@@ -139,287 +172,440 @@
   }
   .lp-sub {
     font-size: clamp(15px, 1.8vw, 18px);
-    color: rgba(232,232,236,0.5); max-width: 500px;
-    margin: 0 auto 44px; line-height: 1.68;
+    color: rgba(232,232,236,0.52); max-width: 480px;
+    margin: 0 auto 40px; line-height: 1.7;
   }
-  .lp-ctas { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .lp-ctas { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
   .lp-cta-primary {
     display: inline-flex; align-items: center; gap: 8px;
-    background: #7c7aff; color: #fff; padding: 13px 28px;
+    background: #7c7aff; color: #fff; padding: 13px 26px;
     border-radius: 10px; font-size: 15px; font-family: 'Geist', sans-serif;
     font-weight: 500; border: none; cursor: pointer; transition: all 0.2s;
     letter-spacing: -0.01em;
   }
-  .lp-cta-primary:hover { background: #918fff; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,122,255,0.38); }
+  .lp-cta-primary:hover { background: #918fff; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(124,122,255,0.4); }
   .lp-cta-ghost {
     display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
-    color: rgba(232,232,236,0.6); padding: 13px 28px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+    color: rgba(232,232,236,0.6); padding: 13px 26px;
     border-radius: 10px; font-size: 15px; font-family: 'Geist', sans-serif;
-    cursor: pointer; transition: all 0.2s; text-decoration: none;
+    cursor: pointer; transition: all 0.2s;
   }
-  .lp-cta-ghost:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.17); color: #e8e8ec; }
+  .lp-cta-ghost:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16); color: #e8e8ec; }
+  .lp-social-strip {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 12px; color: rgba(232,232,236,0.35);
+    margin-bottom: 60px;
+  }
+  .lp-stars { color: #f59e0b; letter-spacing: 1px; font-size: 11px; }
 
-  /* Browser mockup */
+  /* floating browser mockup */
   .lp-mockup-wrap {
-    margin-top: 60px; position: relative;
-    max-width: 920px; margin-left: auto; margin-right: auto;
+    position: relative; max-width: 940px; margin: 0 auto;
+    animation: lp-float 7s ease-in-out infinite;
+  }
+  @keyframes lp-float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
   }
   .lp-browser {
-    background: linear-gradient(180deg, rgba(255,255,255,0.035) 0%, transparent 100%), #141416;
-    border: 1px solid rgba(255,255,255,0.085);
-    border-radius: 14px; overflow: hidden;
-    box-shadow: 0 48px 130px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04), 0 0 80px rgba(124,122,255,0.055);
+    background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%), #141416;
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 14px 14px 0 0; overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04),
+                0 50px 140px rgba(0,0,0,0.7),
+                0 0 100px rgba(124,122,255,0.06);
   }
   .lp-browser-bar {
-    display: flex; align-items: center; gap: 7px;
+    display: flex; align-items: center; gap: 6px;
     padding: 11px 16px; border-bottom: 1px solid rgba(255,255,255,0.055);
-    background: rgba(255,255,255,0.018);
+    background: rgba(255,255,255,0.016);
   }
   .lp-brdot { width: 11px; height: 11px; border-radius: 50%; }
+  .lp-browser-url-wrap {
+    flex: 1; display: flex; justify-content: center;
+  }
   .lp-browser-url {
-    flex: 1; text-align: center; font-size: 11px;
-    color: rgba(255,255,255,0.18); font-family: 'Geist Mono', monospace;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px; padding: 3px 12px;
+    font-size: 11px; color: rgba(255,255,255,0.22);
+    font-family: 'Geist Mono', monospace;
   }
-  .lp-browser-body { display: flex; height: 340px; }
+  .lp-browser-url-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(74,222,128,0.7); }
+  .lp-app-topbar {
+    height: 40px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex; align-items: center; padding: 0 14px; gap: 10px;
+  }
+  .lp-app-topbar-search {
+    flex: 1; height: 26px; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06); border-radius: 7px;
+    font-size: 11px; color: rgba(255,255,255,0.2);
+    display: flex; align-items: center; padding: 0 10px; gap: 6px; max-width: 260px;
+  }
+  .lp-app-topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .lp-app-avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: linear-gradient(135deg, #7c7aff, #9290ff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600; color: #fff;
+  }
+  .lp-browser-body { display: flex; height: 310px; }
   .lp-app-sidebar {
-    width: 186px; border-right: 1px solid rgba(255,255,255,0.055);
-    padding: 14px 0; flex-shrink: 0;
-    background: #0f0f11;
+    width: 186px; border-right: 1px solid rgba(255,255,255,0.05);
+    padding: 13px 0; flex-shrink: 0; background: #0f0f11;
   }
-  .lp-app-sidebar-section {
-    font-size: 10px; color: rgba(255,255,255,0.2);
+  .lp-app-sidebar-sect {
+    font-size: 10px; color: rgba(255,255,255,0.18);
     letter-spacing: 0.07em; text-transform: uppercase; font-weight: 500;
-    padding: 0 0 6px 18px; margin-top: 6px;
+    padding: 6px 0 5px 18px; margin-top: 4px;
   }
   .lp-app-nav {
-    display: flex; align-items: center; gap: 8px;
-    padding: 6px 10px 6px 12px; margin: 0 6px 1px;
-    border-radius: 6px; font-size: 12px;
-    color: rgba(255,255,255,0.28); cursor: default;
+    display: flex; align-items: center; gap: 7px;
+    padding: 5px 10px 5px 12px; margin: 0 6px 1px;
+    border-radius: 6px; font-size: 12px; color: rgba(255,255,255,0.27); cursor: default;
   }
   .lp-app-nav.on { background: rgba(124,122,255,0.12); color: #9290ff; }
-  .lp-app-nav-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .lp-nav-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
   .lp-app-content {
-    flex: 1; padding: 18px 20px;
-    display: flex; flex-direction: column; gap: 10px; overflow: hidden;
+    flex: 1; padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 9px; overflow: hidden;
   }
-  .lp-app-heading { display: flex; align-items: baseline; justify-content: space-between; }
-  .lp-app-title { font-size: 13px; font-weight: 600; color: #f0f0f5; }
-  .lp-app-date { font-size: 10px; color: rgba(255,255,255,0.22); }
-  .lp-metrics { display: flex; gap: 8px; }
-  .lp-metric {
-    flex: 1; border-radius: 7px; padding: 10px 12px;
+  .lp-app-heading { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2px; }
+  .lp-app-greeting { font-size: 13px; font-weight: 600; color: #f0f0f5; }
+  .lp-app-meta { font-size: 10px; color: rgba(255,255,255,0.2); }
+  .lp-app-metrics { display: flex; gap: 7px; }
+  .lp-app-metric {
+    flex: 1; border-radius: 7px; padding: 9px 11px;
     background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), #141416;
     border: 1px solid rgba(255,255,255,0.07);
   }
-  .lp-metric-val { font-size: 18px; font-weight: 600; color: #f0f0f5; line-height: 1; }
-  .lp-metric-lbl { font-size: 9px; color: rgba(255,255,255,0.28); margin-top: 3px; }
-  .lp-hw-card {
-    background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), #141416;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 7px; padding: 10px 12px; flex: 1;
+  .lp-app-metric-val { font-size: 16px; font-weight: 600; color: #f0f0f5; line-height: 1; }
+  .lp-app-metric-lbl { font-size: 9px; color: rgba(255,255,255,0.26); margin-top: 3px; }
+  .lp-app-hw {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%), #141416;
+    border: 1px solid rgba(255,255,255,0.07); border-radius: 7px; padding: 10px 12px; flex: 1;
   }
-  .lp-hw-head { font-size: 9px; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 8px; }
-  .lp-hw-row {
+  .lp-app-hw-head { font-size: 9px; color: rgba(255,255,255,0.22); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 7px; }
+  .lp-app-hw-row {
     display: flex; align-items: center; gap: 7px;
-    padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.035);
-    font-size: 10px; color: rgba(255,255,255,0.42);
+    padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-size: 10px; color: rgba(255,255,255,0.4);
   }
-  .lp-hw-row:last-child { border-bottom: none; }
-  .lp-hw-bar { width: 3px; height: 13px; border-radius: 2px; flex-shrink: 0; }
-  .lp-hw-badge { margin-left: auto; padding: 2px 6px; border-radius: 4px; font-size: 9px; }
-  .lp-bottom-row { display: flex; gap: 8px; }
-  .lp-ai-card {
+  .lp-app-hw-row:last-child { border-bottom: none; }
+  .lp-app-hw-bar { width: 3px; height: 13px; border-radius: 2px; flex-shrink: 0; }
+  .lp-app-hw-badge { margin-left: auto; padding: 2px 6px; border-radius: 4px; font-size: 9px; }
+  .lp-app-bottom { display: flex; gap: 8px; }
+  .lp-app-ai {
     flex: 1; background: linear-gradient(135deg, rgba(124,122,255,0.08) 0%, #141416 55%);
-    border: 1px solid rgba(124,122,255,0.16); border-radius: 7px; padding: 9px 11px;
+    border: 1px solid rgba(124,122,255,0.15); border-radius: 7px; padding: 8px 11px;
   }
-  .lp-ai-head { font-size: 9px; color: rgba(124,122,255,0.75); font-weight: 500; margin-bottom: 4px; }
-  .lp-ai-body { font-size: 10px; color: rgba(255,255,255,0.28); line-height: 1.5; }
-  .lp-stat-mini {
+  .lp-app-ai-head { font-size: 9px; color: rgba(124,122,255,0.78); font-weight: 500; margin-bottom: 3px; }
+  .lp-app-ai-body { font-size: 10px; color: rgba(255,255,255,0.27); line-height: 1.5; }
+  .lp-app-stat {
     flex: 1; background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), #141416;
-    border: 1px solid rgba(255,255,255,0.07); border-radius: 7px; padding: 9px 11px;
+    border: 1px solid rgba(255,255,255,0.07); border-radius: 7px; padding: 8px 11px;
   }
-  .lp-stat-mini-lbl { font-size: 9px; color: rgba(255,255,255,0.25); margin-bottom: 4px; }
-  .lp-stat-mini-val { display: flex; align-items: center; gap: 5px; }
+  .lp-app-stat-lbl { font-size: 9px; color: rgba(255,255,255,0.24); margin-bottom: 4px; }
   .lp-mockup-fade {
-    position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+    position: absolute; bottom: 0; left: 0; right: 0; height: 90px;
     background: linear-gradient(transparent, #0c0c0e); pointer-events: none;
   }
 
-  /* Features grid */
-  .lp-features { padding: 80px 52px; }
-  .lp-section-kicker {
-    text-align: center; font-size: 11px; letter-spacing: 0.1em;
-    text-transform: uppercase; color: #7c7aff; margin-bottom: 12px; font-weight: 500;
+  /* ─── SECTION SHARED ─── */
+  .lp-section { padding: 88px 52px; }
+  .lp-kicker { text-align: center; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #7c7aff; margin-bottom: 11px; font-weight: 500; }
+  .lp-h2 { text-align: center; font-size: clamp(26px, 3.8vw, 40px); font-weight: 600; letter-spacing: -0.035em; color: #f0f0f4; margin: 0 0 12px; line-height: 1.15; }
+  .lp-h2 em { font-family: 'Source Serif 4', Georgia, serif; font-style: italic; font-weight: 400; color: rgba(232,232,236,0.58); }
+  .lp-section-p { text-align: center; font-size: 15px; color: rgba(232,232,236,0.42); max-width: 440px; margin: 0 auto 52px; line-height: 1.65; }
+  .lp-divider { max-width: 1060px; margin: 0 auto; border: none; border-top: 1px solid rgba(255,255,255,0.04); }
+
+  /* ─── BENTO GRID ─── */
+  .lp-bento {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto auto;
+    gap: 12px; max-width: 1060px; margin: 0 auto;
   }
-  .lp-section-h2 {
-    text-align: center; font-size: clamp(26px, 4vw, 38px);
-    font-weight: 600; letter-spacing: -0.035em; color: #f0f0f5; margin: 0 0 12px;
-  }
-  .lp-section-h2 em {
-    font-family: 'Source Serif 4', Georgia, serif;
-    font-style: italic; font-weight: 400; color: rgba(232,232,236,0.55);
-  }
-  .lp-section-sub {
-    text-align: center; font-size: 15px;
-    color: rgba(232,232,236,0.42); max-width: 460px; margin: 0 auto 52px; line-height: 1.65;
-  }
-  .lp-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 14px; max-width: 1020px; margin: 0 auto;
-  }
-  .lp-card {
+  .bento-dashboard { grid-column: 1 / 3; }
+  .bento-ai { grid-column: 3; grid-row: 1 / 3; }
+  .bento-notes { grid-column: 1; }
+  .bento-hw { grid-column: 2; }
+  .bento-grades { grid-column: 1 / 3; }
+  .bento-quiz { grid-column: 3; }
+
+  .lp-bento-card {
     background: linear-gradient(180deg, rgba(255,255,255,0.022) 0%, transparent 100%), #141416;
     border: 1px solid rgba(255,255,255,0.07);
     border-radius: 14px; padding: 26px;
-    transition: border-color 0.22s, transform 0.22s, box-shadow 0.22s;
+    transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
     position: relative; overflow: hidden;
   }
-  .lp-card::after {
+  .lp-bento-card::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(124,122,255,0.28), transparent);
-    opacity: 0; transition: opacity 0.22s;
+    background: linear-gradient(90deg, transparent 10%, rgba(124,122,255,0.3) 50%, transparent 90%);
+    opacity: 0; transition: opacity 0.25s;
   }
-  .lp-card:hover { border-color: rgba(124,122,255,0.22); transform: translateY(-3px); box-shadow: 0 14px 44px rgba(0,0,0,0.38); }
-  .lp-card:hover::after { opacity: 1; }
-  .lp-card.ai {
-    background: linear-gradient(135deg, rgba(124,122,255,0.06) 0%, rgba(20,20,22,0) 55%), linear-gradient(180deg, rgba(255,255,255,0.022) 0%, transparent 100%), #141416;
-    border-color: rgba(124,122,255,0.16);
+  .lp-bento-card:hover { border-color: rgba(124,122,255,0.2); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.35); }
+  .lp-bento-card:hover::before { opacity: 1; }
+  .lp-bento-card.bento-ai {
+    background: linear-gradient(160deg, rgba(124,122,255,0.1) 0%, rgba(124,122,255,0.03) 40%, #141416 70%),
+                linear-gradient(180deg, rgba(255,255,255,0.022) 0%, transparent 100%), #141416;
+    border-color: rgba(124,122,255,0.2);
   }
-  .lp-card-icon {
-    width: 38px; height: 38px; border-radius: 10px;
+  .lp-bento-card.bento-ai::before { opacity: 0.5; }
+  .bc-icon {
+    width: 36px; height: 36px; border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 17px; margin-bottom: 16px;
+    font-size: 16px; margin-bottom: 13px;
   }
-  .lp-card-title { font-size: 14px; font-weight: 600; color: #f0f0f5; letter-spacing: -0.02em; margin-bottom: 7px; }
-  .lp-card.ai .lp-card-title { color: #9290ff; }
-  .lp-card-desc { font-size: 13px; color: rgba(232,232,236,0.42); line-height: 1.65; }
+  .bc-title { font-size: 14px; font-weight: 600; color: #f0f0f4; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .bento-ai .bc-title { color: #9290ff; }
+  .bc-desc { font-size: 12.5px; color: rgba(232,232,236,0.4); line-height: 1.65; margin-bottom: 18px; }
 
-  /* Divider */
-  .lp-divider { max-width: 1020px; margin: 0 auto; border: none; border-top: 1px solid rgba(255,255,255,0.04); }
+  /* Dashboard mini visual */
+  .bm-metrics { display: flex; gap: 8px; margin-bottom: 10px; }
+  .bm-chip {
+    flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 7px; padding: 7px 10px; font-size: 10px;
+  }
+  .bm-chip-val { font-size: 15px; font-weight: 600; color: #f0f0f5; line-height: 1.1; }
+  .bm-chip-lbl { color: rgba(255,255,255,0.3); margin-top: 1px; }
+  .bm-week { display: flex; gap: 4px; }
+  .bm-day {
+    flex: 1; height: 28px; border-radius: 5px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: rgba(255,255,255,0.2);
+  }
+  .bm-day.done { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.15); color: rgba(74,222,128,0.6); }
+  .bm-day.today { background: rgba(124,122,255,0.14); border-color: rgba(124,122,255,0.25); color: #9290ff; }
 
-  /* Detail rows */
+  /* AI mini visual */
+  .bm-ai-chat { display: flex; flex-direction: column; gap: 8px; }
+  .bm-user-bubble {
+    align-self: flex-end; max-width: 85%;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px 10px 3px 10px;
+    padding: 8px 12px; font-size: 11px; color: rgba(255,255,255,0.55);
+    font-style: italic;
+  }
+  .bm-ai-bubble {
+    align-self: flex-start; max-width: 100%;
+    background: rgba(124,122,255,0.1); border: 1px solid rgba(124,122,255,0.18);
+    border-radius: 10px 10px 10px 3px;
+    padding: 10px 12px; font-size: 11px; color: rgba(255,255,255,0.55); line-height: 1.55;
+  }
+  .bm-ai-bubble-head { font-size: 10px; color: rgba(124,122,255,0.85); font-weight: 500; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+  .bm-ai-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(124,122,255,0.7); animation: bdot 2s ease-in-out infinite; }
+  @keyframes bdot { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+  /* Notes mini visual */
+  .bm-note { display: flex; flex-direction: column; gap: 6px; }
+  .bm-note-h { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.55); font-family: 'Source Serif 4', serif; font-style: italic; }
+  .bm-note-line { height: 2px; border-radius: 2px; background: rgba(255,255,255,0.07); }
+  .bm-note-line.short { width: 65%; }
+  .bm-note-line.med { width: 80%; }
+
+  /* Homework mini visual */
+  .bm-hw-list { display: flex; flex-direction: column; gap: 5px; }
+  .bm-hw-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: rgba(255,255,255,0.5);
+    padding: 5px 8px; border-radius: 6px;
+    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.05);
+  }
+  .bm-hw-item.done { color: rgba(255,255,255,0.25); text-decoration: line-through; }
+  .bm-hw-color { width: 3px; height: 14px; border-radius: 2px; flex-shrink: 0; }
+  .bm-hw-due { margin-left: auto; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+
+  /* Grades mini visual */
+  .bm-grade-bars { display: flex; flex-direction: column; gap: 8px; }
+  .bm-grade-row { display: flex; align-items: center; gap: 8px; }
+  .bm-grade-name { font-size: 11px; color: rgba(255,255,255,0.4); width: 72px; flex-shrink: 0; }
+  .bm-bar-track { flex: 1; height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .bm-bar-fill { height: 100%; border-radius: 3px; }
+  .bm-grade-letter { font-size: 11px; font-weight: 600; width: 22px; text-align: right; flex-shrink: 0; }
+
+  /* Quizzes mini visual */
+  .bm-quiz-center { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .bm-ring-wrap { position: relative; width: 76px; height: 76px; }
+  .bm-ring-svg { width: 76px; height: 76px; transform: rotate(-90deg); }
+  .bm-ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 6; }
+  .bm-ring-fg { fill: none; stroke: #7c7aff; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 201; stroke-dashoffset: 26; }
+  .bm-ring-text {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 600; color: #f0f0f5; letter-spacing: -0.03em;
+  }
+  .bm-quiz-lbl { font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; }
+  .bm-quiz-trend { font-size: 11px; color: rgba(74,222,128,0.75); text-align: center; }
+
+  /* ─── TESTIMONIALS ─── */
+  .lp-testimonials-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 14px; max-width: 1060px; margin: 0 auto;
+  }
+  .lp-testimonial {
+    background: linear-gradient(180deg, rgba(255,255,255,0.022) 0%, transparent 100%), #141416;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px; padding: 24px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .lp-t-stars { color: #f59e0b; font-size: 12px; letter-spacing: 2px; }
+  .lp-t-quote { font-size: 14px; color: rgba(232,232,236,0.65); line-height: 1.7; flex: 1; font-style: italic; }
+  .lp-t-footer { display: flex; align-items: center; gap: 11px; }
+  .lp-t-avatar {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; color: #fff;
+  }
+  .lp-t-name { font-size: 13px; font-weight: 500; color: rgba(232,232,236,0.75); letter-spacing: -0.01em; }
+  .lp-t-role { font-size: 11px; color: rgba(232,232,236,0.35); margin-top: 1px; }
+
+  /* ─── DETAIL ROWS ─── */
   .lp-detail {
-    max-width: 1020px; margin: 0 auto;
+    max-width: 1060px; margin: 0 auto;
     padding: 80px 52px;
     display: flex; gap: 72px; align-items: center;
   }
   .lp-detail.rev { flex-direction: row-reverse; }
   .lp-detail-copy { flex: 1; min-width: 260px; }
   .lp-detail-chip {
+    display: inline-flex; align-items: center; gap: 6px;
     font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
     color: rgba(124,122,255,0.78); margin-bottom: 14px; font-weight: 500;
-    display: inline-block;
   }
   .lp-detail-h2 {
     font-size: clamp(22px, 3vw, 32px); font-weight: 600; letter-spacing: -0.03em;
-    color: #f0f0f5; margin: 0 0 14px; line-height: 1.2;
+    color: #f0f0f4; margin: 0 0 14px; line-height: 1.18;
   }
   .lp-detail-h2 em { font-family: 'Source Serif 4', Georgia, serif; font-style: italic; font-weight: 400; }
   .lp-detail-p { font-size: 15px; color: rgba(232,232,236,0.46); line-height: 1.72; margin: 0 0 22px; }
-  .lp-points { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
-  .lp-points li { display: flex; align-items: baseline; gap: 10px; font-size: 13px; color: rgba(232,232,236,0.56); }
-  .lp-points li::before { content: '\2192'; color: #7c7aff; flex-shrink: 0; }
+  .lp-points { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .lp-points li { display: flex; align-items: baseline; gap: 10px; font-size: 13px; color: rgba(232,232,236,0.55); }
+  .lp-points li::before { content: '\2192'; color: #7c7aff; flex-shrink: 0; font-size: 12px; }
   .lp-detail-visual { flex: 1; min-width: 260px; }
   .lp-panel {
     background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%), #141416;
-    border: 1px solid rgba(255,255,255,0.08); border-radius: 13px; padding: 20px;
-    box-shadow: 0 22px 65px rgba(0,0,0,0.42);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 13px; padding: 22px;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.45);
   }
-  .lp-panel-head { font-size: 10px; color: rgba(255,255,255,0.28); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 14px; }
+  .lp-panel-head { font-size: 10px; color: rgba(255,255,255,0.26); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 14px; }
 
-  /* Stats strip */
+  /* ─── STATS STRIP ─── */
   .lp-stats-strip {
     border-top: 1px solid rgba(255,255,255,0.04);
     border-bottom: 1px solid rgba(255,255,255,0.04);
     padding: 52px;
-    display: flex; align-items: stretch; justify-content: center;
+    display: flex; justify-content: center;
   }
-  .lp-stats-inner { display: flex; max-width: 760px; width: 100%; }
-  .lp-stat { flex: 1; text-align: center; padding: 0 32px; }
+  .lp-stats-inner { display: flex; max-width: 780px; width: 100%; }
+  .lp-stat { flex: 1; text-align: center; padding: 0 28px; }
   .lp-stat + .lp-stat { border-left: 1px solid rgba(255,255,255,0.055); }
-  .lp-stat-val {
-    font-size: 30px; font-weight: 600; letter-spacing: -0.04em; color: #f0f0f5;
-    font-family: 'Source Serif 4', Georgia, serif;
-  }
+  .lp-stat-val { font-size: 28px; font-weight: 600; letter-spacing: -0.04em; color: #f0f0f4; font-family: 'Source Serif 4', Georgia, serif; }
   .lp-stat-lbl { font-size: 12px; color: rgba(232,232,236,0.35); margin-top: 4px; }
 
-  /* Final CTA */
-  .lp-cta-section {
-    text-align: center; padding: 96px 52px;
+  /* ─── FINAL CTA ─── */
+  .lp-cta-final {
+    text-align: center; padding: 100px 52px;
     position: relative; overflow: hidden;
   }
-  .lp-cta-glow {
-    position: absolute; bottom: -180px; left: 50%; transform: translateX(-50%);
+  .lp-cta-final::before {
+    content: ''; position: absolute; bottom: -160px; left: 50%; transform: translateX(-50%);
     width: 700px; height: 500px;
-    background: radial-gradient(ellipse at center, rgba(124,122,255,0.065) 0%, transparent 68%);
+    background: radial-gradient(ellipse at center, rgba(124,122,255,0.07) 0%, transparent 65%);
     pointer-events: none;
   }
-  .lp-cta-h2 {
-    font-size: clamp(34px, 5.5vw, 58px); font-weight: 600; letter-spacing: -0.04em;
-    color: #f0f0f5; margin: 0 0 14px;
+  .lp-cta-final::after {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.022) 1px, transparent 1px);
+    background-size: 26px 26px;
+    mask-image: radial-gradient(ellipse 70% 80% at 50% 100%, black 30%, transparent 100%);
+    pointer-events: none;
   }
+  .lp-cta-inner { position: relative; z-index: 1; }
+  .lp-cta-h2 { font-size: clamp(36px, 6vw, 62px); font-weight: 600; letter-spacing: -0.04em; color: #f0f0f4; margin: 0 0 14px; }
   .lp-cta-h2 em { font-family: 'Source Serif 4', Georgia, serif; font-style: italic; font-weight: 400; color: #7c7aff; }
-  .lp-cta-note { font-size: 14px; color: rgba(232,232,236,0.38); margin: 0 0 38px; }
+  .lp-cta-note { font-size: 14px; color: rgba(232,232,236,0.38); margin: 0 0 36px; }
 
-  /* Footer */
+  /* ─── FOOTER ─── */
   .lp-footer {
     border-top: 1px solid rgba(255,255,255,0.05);
-    padding: 32px 52px;
-    display: flex; align-items: center; justify-content: space-between;
+    padding: 36px 52px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 32px;
   }
+  .lp-footer-left { display: flex; flex-direction: column; gap: 10px; }
   .lp-footer-brand { display: flex; align-items: center; gap: 8px; }
   .lp-footer-mark {
-    width: 24px; height: 24px; border-radius: 6px;
+    width: 26px; height: 26px; border-radius: 7px;
     background: rgba(124,122,255,0.1); border: 1px solid rgba(124,122,255,0.18);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; color: #7c7aff;
+    display: flex; align-items: center; justify-content: center; font-size: 12px; color: #7c7aff;
   }
-  .lp-footer-copy { font-size: 12px; color: rgba(232,232,236,0.22); }
-  .lp-footer-links { display: flex; gap: 22px; }
-  .lp-footer-links a { font-size: 12px; color: rgba(232,232,236,0.28); text-decoration: none; transition: color 0.15s; }
-  .lp-footer-links a:hover { color: rgba(232,232,236,0.7); }
+  .lp-footer-name { font-size: 14px; font-weight: 600; color: rgba(232,232,236,0.7); letter-spacing: -0.02em; }
+  .lp-footer-tagline { font-size: 12px; color: rgba(232,232,236,0.25); }
+  .lp-footer-links { display: flex; gap: 32px; padding-top: 4px; }
+  .lp-footer-col { display: flex; flex-direction: column; gap: 8px; }
+  .lp-footer-col-head { font-size: 11px; color: rgba(232,232,236,0.35); font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+  .lp-footer-col a { font-size: 13px; color: rgba(232,232,236,0.38); text-decoration: none; transition: color 0.15s; }
+  .lp-footer-col a:hover { color: rgba(232,232,236,0.75); }
+  .lp-footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.04); margin-top: 20px;
+    padding: 20px 52px; display: flex; align-items: center; justify-content: space-between;
+    font-size: 11px; color: rgba(232,232,236,0.2);
+  }
 
-  /* Responsive */
-  @media (max-width: 820px) {
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
     .lp-nav { padding: 0 22px; }
-    .lp-hero { padding: 80px 22px 56px; }
-    .lp-features { padding: 60px 22px; }
-    .lp-grid { grid-template-columns: 1fr 1fr; }
-    .lp-detail, .lp-detail.rev { flex-direction: column !important; padding: 60px 22px; gap: 40px; }
+    .lp-nav-links { display: none; }
+    .lp-hero { padding: 80px 22px 0; }
+    .lp-section { padding: 60px 22px; }
+    .lp-bento { grid-template-columns: 1fr 1fr; }
+    .bento-dashboard, .bento-grades { grid-column: 1 / 3; }
+    .bento-ai { grid-column: 1 / 3; grid-row: auto; }
+    .bento-notes, .bento-hw, .bento-quiz { grid-column: span 1; }
+    .lp-testimonials-grid { grid-template-columns: 1fr; }
+    .lp-detail, .lp-detail.rev { flex-direction: column !important; padding: 60px 22px; gap: 36px; }
     .lp-detail-visual { width: 100%; }
     .lp-stats-strip { padding: 40px 22px; }
-    .lp-cta-section { padding: 80px 22px; }
-    .lp-footer { flex-direction: column; gap: 18px; padding: 28px 22px; text-align: center; }
-    .lp-browser-body { height: 280px; }
-    .lp-app-sidebar { width: 150px; }
+    .lp-cta-final { padding: 80px 22px; }
+    .lp-footer { flex-direction: column; padding: 32px 22px; }
+    .lp-footer-bottom { padding: 16px 22px; flex-direction: column; gap: 8px; text-align: center; }
+    .lp-browser-body { height: 260px; }
+    .lp-app-sidebar { width: 152px; }
   }
-  @media (max-width: 520px) {
-    .lp-grid { grid-template-columns: 1fr; }
-    .lp-stats-inner { flex-direction: column; gap: 28px; }
-    .lp-stat + .lp-stat { border-left: none; border-top: 1px solid rgba(255,255,255,0.055); padding-top: 28px; }
+  @media (max-width: 580px) {
+    .lp-bento { grid-template-columns: 1fr; }
+    .bento-dashboard, .bento-grades, .bento-ai, .bento-notes, .bento-hw, .bento-quiz { grid-column: 1; grid-row: auto; }
+    .lp-stats-inner { flex-direction: column; gap: 26px; }
+    .lp-stat + .lp-stat { border-left: none; border-top: 1px solid rgba(255,255,255,0.055); padding-top: 26px; }
+    .lp-h1 { font-size: 40px; }
     .lp-browser-body { height: 220px; }
     .lp-app-sidebar { display: none; }
-    .lp-h1 { font-size: 38px; }
+    .lp-footer-links { flex-direction: column; gap: 20px; }
   }
 </style>
 </head>
 <body>
 
-<!-- ─── INITIAL LOADING SCREEN ─── -->
+<!-- ─── LOADING ─── -->
 <div id="initial-screen">
   <div class="is-mark">&#10022;</div>
 </div>
 
-<!-- ─── LANDING PAGE ─── -->
+<!-- ─── LANDING ─── -->
 <div id="landing">
 
-  <!-- Nav -->
+  <!-- NAV -->
   <nav class="lp-nav">
-    <div class="lp-logo">
+    <a class="lp-logo" href="#">
       <div class="lp-logo-mark">&#10022;</div>
       <span class="lp-logo-name">Scholar</span>
+    </a>
+    <div class="lp-nav-links">
+      <button class="lp-nav-link" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Features</button>
+      <button class="lp-nav-link" onclick="document.getElementById('testimonials').scrollIntoView({behavior:'smooth'})">Reviews</button>
     </div>
     <div class="lp-nav-right">
       <button class="lp-btn-ghost" onclick="window.openSignIn()">Sign in</button>
@@ -427,94 +613,127 @@
     </div>
   </nav>
 
-  <!-- Hero -->
+  <!-- HERO -->
   <section class="lp-hero">
-    <div class="lp-hero-glow"></div>
-    <div class="lp-badge">
-      <div class="lp-badge-dot"></div>
-      AI-powered academic notebook
-    </div>
-    <h1 class="lp-h1">Your academic life,<br><em>organized.</em></h1>
-    <p class="lp-sub">Notes, homework, grades, and quizzes &mdash; all in one place. Built for students who take their studies seriously.</p>
-    <div class="lp-ctas">
-      <button class="lp-cta-primary" onclick="window.openSignIn()">
-        Get started free
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      <button class="lp-cta-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
-        See features &darr;
-      </button>
+    <div class="lp-hero-glow-1"></div>
+    <div class="lp-hero-glow-2"></div>
+    <div class="lp-hero-glow-3"></div>
+    <div class="lp-hero-inner">
+      <div class="lp-badge lp-reveal">
+        <div class="lp-badge-icon">&#10022;</div>
+        AI-powered academic notebook
+      </div>
+      <h1 class="lp-h1 lp-reveal lp-reveal-delay-1">
+        Your academic life,<br><em>organized.</em>
+      </h1>
+      <p class="lp-sub lp-reveal lp-reveal-delay-2">
+        Notes, homework, grades, and quizzes &mdash; all in one place.<br>
+        Built for students who take their work seriously.
+      </p>
+      <div class="lp-ctas lp-reveal lp-reveal-delay-3">
+        <button class="lp-cta-primary" onclick="window.openSignIn()">
+          Get started free
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="lp-cta-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+          See features &darr;
+        </button>
+      </div>
+      <div class="lp-social-strip lp-reveal">
+        <span class="lp-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+        Loved by students across every major
+      </div>
     </div>
 
     <!-- Browser mockup -->
-    <div class="lp-mockup-wrap">
+    <div class="lp-mockup-wrap lp-reveal">
       <div class="lp-browser">
         <div class="lp-browser-bar">
           <div class="lp-brdot" style="background:#ff5f57"></div>
           <div class="lp-brdot" style="background:#ffbd2e"></div>
           <div class="lp-brdot" style="background:#28c840"></div>
-          <div class="lp-browser-url">scholar-is.live</div>
+          <div class="lp-browser-url-wrap">
+            <div class="lp-browser-url">
+              <div class="lp-browser-url-dot"></div>
+              scholar-is.live
+            </div>
+          </div>
+        </div>
+        <!-- App topbar -->
+        <div class="lp-app-topbar">
+          <div class="lp-app-topbar-search">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <circle cx="5" cy="5" r="3.5" stroke="rgba(255,255,255,0.3)" stroke-width="1.2"/>
+              <path d="M8 8l2 2" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            Search notes, homework, quizzes&hellip;
+          </div>
+          <div class="lp-app-topbar-right">
+            <div style="font-size:11px;color:rgba(124,122,255,0.8);background:rgba(124,122,255,0.1);border:1px solid rgba(124,122,255,0.2);border-radius:6px;padding:3px 9px">&#10022; AI on</div>
+            <div class="lp-app-avatar">J</div>
+          </div>
         </div>
         <div class="lp-browser-body">
           <div class="lp-app-sidebar">
-            <div class="lp-app-sidebar-section">Academic</div>
-            <div class="lp-app-nav on"><span style="font-size:12px;opacity:0.9">&#9672;</span> Dashboard</div>
+            <div class="lp-app-sidebar-sect">Academic</div>
+            <div class="lp-app-nav on"><span style="font-size:12px">&#9672;</span> Dashboard</div>
             <div class="lp-app-nav"><span style="font-size:12px">&#9643;</span> Homework</div>
             <div class="lp-app-nav"><span style="font-size:12px">&#9673;</span> Grades</div>
             <div class="lp-app-nav"><span style="font-size:12px">&#9678;</span> Quizzes</div>
-            <div class="lp-app-sidebar-section" style="margin-top:10px">Subjects</div>
-            <div class="lp-app-nav"><div class="lp-app-nav-dot" style="background:#7c7aff"></div> Mathematics</div>
-            <div class="lp-app-nav"><div class="lp-app-nav-dot" style="background:#4ade80"></div> Biology</div>
-            <div class="lp-app-nav"><div class="lp-app-nav-dot" style="background:#f59e0b"></div> Literature</div>
+            <div class="lp-app-sidebar-sect" style="margin-top:8px">Subjects</div>
+            <div class="lp-app-nav"><div class="lp-nav-dot" style="background:#7c7aff"></div> Mathematics</div>
+            <div class="lp-app-nav"><div class="lp-nav-dot" style="background:#4ade80"></div> Biology</div>
+            <div class="lp-app-nav"><div class="lp-nav-dot" style="background:#f59e0b"></div> Literature</div>
+            <div class="lp-app-nav"><div class="lp-nav-dot" style="background:#fb7185"></div> History</div>
           </div>
           <div class="lp-app-content">
             <div class="lp-app-heading">
-              <div class="lp-app-title">Good morning, Julian</div>
-              <div class="lp-app-date">Monday, Jun 9</div>
+              <div class="lp-app-greeting">Good morning, Julian</div>
+              <div class="lp-app-meta">Monday &middot; Jun 9</div>
             </div>
-            <div class="lp-metrics">
-              <div class="lp-metric" style="border-left:3px solid #7c7aff;background:linear-gradient(135deg,rgba(124,122,255,0.1) 0%,#141416 55%)">
-                <div class="lp-metric-val">3.8</div>
-                <div class="lp-metric-lbl">Current GPA</div>
+            <div class="lp-app-metrics">
+              <div class="lp-app-metric" style="border-left:3px solid #7c7aff;background:linear-gradient(135deg,rgba(124,122,255,0.1) 0%,#141416 55%)">
+                <div class="lp-app-metric-val">3.8</div>
+                <div class="lp-app-metric-lbl">GPA</div>
               </div>
-              <div class="lp-metric" style="border-left:3px solid #4ade80;background:linear-gradient(135deg,rgba(74,222,128,0.1) 0%,#141416 55%)">
-                <div class="lp-metric-val">12</div>
-                <div class="lp-metric-lbl">Day streak &#128293;</div>
+              <div class="lp-app-metric" style="border-left:3px solid #4ade80;background:linear-gradient(135deg,rgba(74,222,128,0.1) 0%,#141416 55%)">
+                <div class="lp-app-metric-val">12</div>
+                <div class="lp-app-metric-lbl">day streak &#128293;</div>
               </div>
-              <div class="lp-metric" style="border-left:3px solid #f59e0b;background:linear-gradient(135deg,rgba(245,158,11,0.1) 0%,#141416 55%)">
-                <div class="lp-metric-val">4</div>
-                <div class="lp-metric-lbl">Due this week</div>
+              <div class="lp-app-metric" style="border-left:3px solid #f59e0b;background:linear-gradient(135deg,rgba(245,158,11,0.1) 0%,#141416 55%)">
+                <div class="lp-app-metric-val">4</div>
+                <div class="lp-app-metric-lbl">due this week</div>
               </div>
             </div>
-            <div class="lp-hw-card">
-              <div class="lp-hw-head">Today's assignments</div>
-              <div class="lp-hw-row">
-                <div class="lp-hw-bar" style="background:#7c7aff"></div>
+            <div class="lp-app-hw">
+              <div class="lp-app-hw-head">Today's assignments</div>
+              <div class="lp-app-hw-row">
+                <div class="lp-app-hw-bar" style="background:#7c7aff"></div>
                 Calculus Problem Set 4
-                <div class="lp-hw-badge" style="background:rgba(255,80,80,0.14);color:rgba(255,110,110,0.85)">Today</div>
+                <div class="lp-app-hw-badge" style="background:rgba(255,80,80,0.14);color:rgba(255,110,110,0.85)">Today</div>
               </div>
-              <div class="lp-hw-row">
-                <div class="lp-hw-bar" style="background:#4ade80"></div>
+              <div class="lp-app-hw-row">
+                <div class="lp-app-hw-bar" style="background:#4ade80"></div>
                 Biology Lab Report Draft
-                <div class="lp-hw-badge" style="background:rgba(245,158,11,0.12);color:rgba(245,158,11,0.72)">Wed</div>
+                <div class="lp-app-hw-badge" style="background:rgba(245,158,11,0.12);color:rgba(245,158,11,0.72)">Wed</div>
               </div>
-              <div class="lp-hw-row">
-                <div class="lp-hw-bar" style="background:#f59e0b"></div>
+              <div class="lp-app-hw-row">
+                <div class="lp-app-hw-bar" style="background:#f59e0b"></div>
                 Essay: Heart of Darkness
-                <div class="lp-hw-badge" style="background:rgba(124,122,255,0.12);color:rgba(124,122,255,0.75)">Fri</div>
+                <div class="lp-app-hw-badge" style="background:rgba(124,122,255,0.12);color:rgba(124,122,255,0.75)">Fri</div>
               </div>
             </div>
-            <div class="lp-bottom-row">
-              <div class="lp-ai-card">
-                <div class="lp-ai-head">&#10022; AI Study Guide</div>
-                <div class="lp-ai-body">Limits &amp; Derivatives<br>3 key concepts ready &rarr;</div>
+            <div class="lp-app-bottom">
+              <div class="lp-app-ai">
+                <div class="lp-app-ai-head">&#10022; AI Study Guide</div>
+                <div class="lp-app-ai-body">Limits &amp; Derivatives<br>3 key concepts ready &rarr;</div>
               </div>
-              <div class="lp-stat-mini">
-                <div class="lp-stat-mini-lbl">Quiz average</div>
-                <div class="lp-stat-mini-val">
-                  <span style="font-size:19px;font-weight:600;color:#f0f0f5;letter-spacing:-0.03em">87%</span>
+              <div class="lp-app-stat">
+                <div class="lp-app-stat-lbl">Quiz average</div>
+                <div style="display:flex;align-items:center;gap:5px">
+                  <span style="font-size:17px;font-weight:600;color:#f0f0f5;letter-spacing:-0.03em">87%</span>
                   <span style="font-size:10px;color:rgba(74,222,128,0.75)">&uarr; 5%</span>
                 </div>
               </div>
@@ -526,58 +745,201 @@
     </div>
   </section>
 
-  <!-- Features -->
-  <section id="features" class="lp-features">
-    <div class="lp-section-kicker">Everything you need</div>
-    <h2 class="lp-section-h2">Built for serious students,<br><em>not for everyone</em></h2>
-    <p class="lp-section-sub">Every feature is designed around how students actually study &mdash; not how productivity apps think they do.</p>
-    <div class="lp-grid">
-      <div class="lp-card">
-        <div class="lp-card-icon" style="background:rgba(124,122,255,0.12);color:#7c7aff">&#9672;</div>
-        <div class="lp-card-title">Smart Dashboard</div>
-        <div class="lp-card-desc">Your academic day at a glance. Upcoming deadlines, study streak, grade overview, and weekly schedule &mdash; all on one screen.</div>
+  <!-- FEATURES BENTO -->
+  <section id="features" class="lp-section">
+    <div class="lp-kicker lp-reveal">Features</div>
+    <h2 class="lp-h2 lp-reveal lp-reveal-delay-1">One app for your <em>entire academic life</em></h2>
+    <p class="lp-section-p lp-reveal lp-reveal-delay-2">Every feature is designed around how students actually study &mdash; not how productivity apps think they do.</p>
+
+    <div class="lp-bento">
+      <!-- Dashboard — wide -->
+      <div class="lp-bento-card bento-dashboard lp-reveal">
+        <div class="bc-icon" style="background:rgba(124,122,255,0.12);color:#7c7aff">&#9672;</div>
+        <div class="bc-title">Smart Dashboard</div>
+        <div class="bc-desc">Your academic day at a glance. Deadlines, streak, grades, and schedule &mdash; one screen.</div>
+        <div class="bm-metrics">
+          <div class="bm-chip" style="border-color:rgba(124,122,255,0.2);background:linear-gradient(135deg,rgba(124,122,255,0.1) 0%,rgba(255,255,255,0.03) 100%)">
+            <div class="bm-chip-val" style="color:#9290ff">3.8</div>
+            <div class="bm-chip-lbl">GPA</div>
+          </div>
+          <div class="bm-chip" style="border-color:rgba(74,222,128,0.2);background:linear-gradient(135deg,rgba(74,222,128,0.08) 0%,rgba(255,255,255,0.03) 100%)">
+            <div class="bm-chip-val" style="color:#4ade80">12</div>
+            <div class="bm-chip-lbl">day streak</div>
+          </div>
+          <div class="bm-chip" style="border-color:rgba(245,158,11,0.2);background:linear-gradient(135deg,rgba(245,158,11,0.08) 0%,rgba(255,255,255,0.03) 100%)">
+            <div class="bm-chip-val" style="color:#f59e0b">4</div>
+            <div class="bm-chip-lbl">due this week</div>
+          </div>
+        </div>
+        <div class="bm-week">
+          <div class="bm-day done">M</div>
+          <div class="bm-day done">T</div>
+          <div class="bm-day today">W</div>
+          <div class="bm-day">T</div>
+          <div class="bm-day">F</div>
+        </div>
       </div>
-      <div class="lp-card">
-        <div class="lp-card-icon" style="background:rgba(99,179,237,0.12);color:#63b3ed">&#9643;</div>
-        <div class="lp-card-title">Notes</div>
-        <div class="lp-card-desc">Rich per-subject notes with block-based editing. AI-powered knowledge tools to generate summaries and find connections between concepts.</div>
+
+      <!-- AI — tall, spans 2 rows -->
+      <div class="lp-bento-card bento-ai lp-reveal lp-reveal-delay-1">
+        <div class="bc-icon" style="background:rgba(124,122,255,0.18);color:#9290ff">&#10022;</div>
+        <div class="bc-title">AI Integration</div>
+        <div class="bc-desc">Connect Claude AI to study smarter. Ask it anything about your own notes.</div>
+        <div class="bm-ai-chat">
+          <div class="bm-user-bubble">&ldquo;Summarize my Calc notes on limits&rdquo;</div>
+          <div class="bm-ai-bubble">
+            <div class="bm-ai-bubble-head">
+              <div class="bm-ai-dot"></div>
+              Scholar AI &middot; from your notes
+            </div>
+            A <strong style="color:rgba(255,255,255,0.65)">limit</strong> describes the value a function approaches as input nears a point. Key rules: <strong style="color:rgba(255,255,255,0.65)">L'H&ocirc;pital's</strong> for 0/0 forms, the <strong style="color:rgba(255,255,255,0.65)">squeeze theorem</strong> for trig, and always check continuity first.
+          </div>
+        </div>
       </div>
-      <div class="lp-card">
-        <div class="lp-card-icon" style="background:rgba(74,222,128,0.12);color:#4ade80">&#9673;</div>
-        <div class="lp-card-title">Homework Tracker</div>
-        <div class="lp-card-desc">Visual kanban board for every assignment. Color-coded by subject, sorted by urgency. Never lose track of a deadline again.</div>
+
+      <!-- Notes -->
+      <div class="lp-bento-card bento-notes lp-reveal">
+        <div class="bc-icon" style="background:rgba(99,179,237,0.12);color:#63b3ed">&#9643;</div>
+        <div class="bc-title">Notes</div>
+        <div class="bc-desc">Rich per-subject notes with AI-powered knowledge tools.</div>
+        <div class="bm-note">
+          <div class="bm-note-h">The Central Limit Theorem</div>
+          <div class="bm-note-line"></div>
+          <div class="bm-note-line med"></div>
+          <div class="bm-note-line short"></div>
+          <div class="bm-note-line"></div>
+          <div class="bm-note-line short"></div>
+        </div>
       </div>
-      <div class="lp-card">
-        <div class="lp-card-icon" style="background:rgba(245,158,11,0.12);color:#f59e0b">&#9671;</div>
-        <div class="lp-card-title">Grade Tracker</div>
-        <div class="lp-card-desc">Track every assignment grade, see your GPA trend, and run what-if analysis before it's too late to change your grade.</div>
+
+      <!-- Homework -->
+      <div class="lp-bento-card bento-hw lp-reveal lp-reveal-delay-1">
+        <div class="bc-icon" style="background:rgba(74,222,128,0.12);color:#4ade80">&#9673;</div>
+        <div class="bc-title">Homework</div>
+        <div class="bc-desc">Visual kanban board. Never miss a deadline.</div>
+        <div class="bm-hw-list">
+          <div class="bm-hw-item">
+            <div class="bm-hw-color" style="background:#7c7aff"></div>
+            Calc Problem Set 4
+            <div class="bm-hw-due" style="background:rgba(255,80,80,0.14);color:rgba(255,110,110,0.85)">Today</div>
+          </div>
+          <div class="bm-hw-item">
+            <div class="bm-hw-color" style="background:#4ade80"></div>
+            Bio Lab Report
+            <div class="bm-hw-due" style="background:rgba(245,158,11,0.12);color:rgba(245,158,11,0.72)">Wed</div>
+          </div>
+          <div class="bm-hw-item done">
+            <div class="bm-hw-color" style="background:rgba(255,255,255,0.1)"></div>
+            History Reading
+            <div class="bm-hw-due" style="color:rgba(74,222,128,0.55)">&#10003;</div>
+          </div>
+        </div>
       </div>
-      <div class="lp-card">
-        <div class="lp-card-icon" style="background:rgba(251,113,133,0.12);color:#fb7185">&#9678;</div>
-        <div class="lp-card-title">Quizzes &amp; Flashcards</div>
-        <div class="lp-card-desc">Built-in quiz engine with multiple choice, flashcard decks, and AI-generated practice questions from your own notes.</div>
+
+      <!-- Grades — wide -->
+      <div class="lp-bento-card bento-grades lp-reveal">
+        <div class="bc-icon" style="background:rgba(245,158,11,0.12);color:#f59e0b">&#9671;</div>
+        <div class="bc-title">Grade Tracker</div>
+        <div class="bc-desc">Live GPA, trend charts, and what-if analysis before it's too late to change your grade.</div>
+        <div class="bm-grade-bars">
+          <div class="bm-grade-row">
+            <div class="bm-grade-name">Mathematics</div>
+            <div class="bm-bar-track"><div class="bm-bar-fill" style="width:97%;background:#4ade80"></div></div>
+            <div class="bm-grade-letter" style="color:#4ade80">A</div>
+          </div>
+          <div class="bm-grade-row">
+            <div class="bm-grade-name">Biology</div>
+            <div class="bm-bar-track"><div class="bm-bar-fill" style="width:84%;background:#63b3ed"></div></div>
+            <div class="bm-grade-letter" style="color:#63b3ed">B+</div>
+          </div>
+          <div class="bm-grade-row">
+            <div class="bm-grade-name">Literature</div>
+            <div class="bm-bar-track"><div class="bm-bar-fill" style="width:77%;background:#f59e0b"></div></div>
+            <div class="bm-grade-letter" style="color:#f59e0b">B</div>
+          </div>
+        </div>
       </div>
-      <div class="lp-card ai">
-        <div class="lp-card-icon" style="background:rgba(124,122,255,0.15);color:#9290ff">&#10022;</div>
-        <div class="lp-card-title">AI Integration</div>
-        <div class="lp-card-desc">Connect Claude AI for personalized study guides, note summaries, concept explanations, and quiz generation &mdash; all powered by your own content.</div>
+
+      <!-- Quizzes -->
+      <div class="lp-bento-card bento-quiz lp-reveal lp-reveal-delay-1">
+        <div class="bc-icon" style="background:rgba(251,113,133,0.12);color:#fb7185">&#9678;</div>
+        <div class="bc-title">Quizzes &amp; Flashcards</div>
+        <div class="bc-desc">Quiz engine, flashcard decks, AI-generated practice questions.</div>
+        <div class="bm-quiz-center">
+          <div class="bm-ring-wrap">
+            <svg class="bm-ring-svg" viewBox="0 0 76 76" aria-hidden="true">
+              <circle class="bm-ring-bg" cx="38" cy="38" r="32"/>
+              <circle class="bm-ring-fg" cx="38" cy="38" r="32"/>
+            </svg>
+            <div class="bm-ring-text">87%</div>
+          </div>
+          <div class="bm-quiz-lbl">Quiz average</div>
+          <div class="bm-quiz-trend">&uarr; 5% this week</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <div class="lp-stats-strip" style="border-top:none;border-bottom:none;padding:0 52px;margin:0 auto;max-width:1060px">
+    <div style="width:100%;height:1px;background:rgba(255,255,255,0.04)"></div>
+  </div>
+
+  <section id="testimonials" class="lp-section" style="padding-top:72px">
+    <div class="lp-kicker lp-reveal">Student reviews</div>
+    <h2 class="lp-h2 lp-reveal lp-reveal-delay-1">Built for people who<br><em>actually use it</em></h2>
+    <p class="lp-section-p lp-reveal lp-reveal-delay-2">Real feedback from real students.</p>
+
+    <div class="lp-testimonials-grid">
+      <div class="lp-testimonial lp-reveal">
+        <div class="lp-t-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="lp-t-quote">&ldquo;Scholar turned my chaotic Google Docs mess into a system I actually stick to. The homework kanban alone changed how I plan my week.&rdquo;</div>
+        <div class="lp-t-footer">
+          <div class="lp-t-avatar" style="background:linear-gradient(135deg,#7c7aff,#9290ff)">P</div>
+          <div>
+            <div class="lp-t-name">Priya A.</div>
+            <div class="lp-t-role">Biology &middot; Year 2</div>
+          </div>
+        </div>
+      </div>
+      <div class="lp-testimonial lp-reveal lp-reveal-delay-1">
+        <div class="lp-t-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="lp-t-quote">&ldquo;Asked the AI assistant to quiz me on my Calculus notes and got 15 practice problems instantly. My exam prep looks completely different now.&rdquo;</div>
+        <div class="lp-t-footer">
+          <div class="lp-t-avatar" style="background:linear-gradient(135deg,#3b82f6,#63b3ed)">J</div>
+          <div>
+            <div class="lp-t-name">James R.</div>
+            <div class="lp-t-role">Engineering &middot; Year 3</div>
+          </div>
+        </div>
+      </div>
+      <div class="lp-testimonial lp-reveal lp-reveal-delay-2">
+        <div class="lp-t-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="lp-t-quote">&ldquo;Finally an app with grade what-if analysis. I knew exactly what I needed going into finals &mdash; no last-minute surprises, no stress spiral.&rdquo;</div>
+        <div class="lp-t-footer">
+          <div class="lp-t-avatar" style="background:linear-gradient(135deg,#4ade80,#22c55e)">M</div>
+          <div>
+            <div class="lp-t-name">Maya L.</div>
+            <div class="lp-t-role">Pre-Law &middot; Year 1</div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
   <hr class="lp-divider">
 
-  <!-- Detail — Homework -->
-  <section class="lp-detail">
+  <!-- DETAIL — Homework -->
+  <section class="lp-detail lp-reveal">
     <div class="lp-detail-copy">
-      <div class="lp-detail-chip">Homework</div>
+      <div class="lp-detail-chip">&#9673; Homework</div>
       <h2 class="lp-detail-h2">Stay on top of <em>every deadline</em></h2>
-      <p class="lp-detail-p">A visual kanban board gives you a clear picture of everything on your plate. No more forgotten assignments or last-minute panic.</p>
+      <p class="lp-detail-p">A visual kanban board gives you a clear picture of everything on your plate. Color-coded by subject, sorted by urgency. No more last-minute panic.</p>
       <ul class="lp-points">
-        <li>Kanban view with Todo, In Progress, and Done columns</li>
+        <li>Kanban board with Todo, In Progress, and Done columns</li>
         <li>Per-subject color coding with urgency badges</li>
-        <li>AI-powered Focus panel highlights what needs attention now</li>
-        <li>Quick-add from anywhere in the app with Ctrl+N</li>
+        <li>AI-powered Focus panel surfaces what needs attention right now</li>
+        <li>Quick-add from anywhere with Ctrl+N</li>
       </ul>
     </div>
     <div class="lp-detail-visual">
@@ -585,28 +947,28 @@
         <div class="lp-panel-head">This week</div>
         <div style="display:flex;gap:8px">
           <div style="flex:1">
-            <div style="font-size:10px;color:rgba(255,255,255,0.22);text-align:center;padding:4px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:7px">TODO</div>
-            <div style="background:linear-gradient(135deg,rgba(124,122,255,0.1) 0%,#141416 55%);border:1px solid rgba(124,122,255,0.18);border-radius:7px;padding:9px 10px;margin-bottom:6px;font-size:11px;color:rgba(255,255,255,0.58)">
+            <div style="font-size:10px;color:rgba(255,255,255,0.2);text-align:center;padding:4px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:7px">TODO</div>
+            <div style="background:linear-gradient(135deg,rgba(124,122,255,0.1) 0%,#141416 55%);border:1px solid rgba(124,122,255,0.18);border-radius:7px;padding:9px 10px;margin-bottom:6px;font-size:11px;color:rgba(255,255,255,0.6)">
               <div style="font-weight:500;margin-bottom:3px">Calc PS4</div>
-              <div style="font-size:10px;color:rgba(255,100,100,0.75)">Due today</div>
+              <div style="font-size:10px;color:rgba(255,100,100,0.8)">Due today</div>
             </div>
-            <div style="background:linear-gradient(135deg,rgba(74,222,128,0.08) 0%,#141416 55%);border:1px solid rgba(74,222,128,0.15);border-radius:7px;padding:9px 10px;font-size:11px;color:rgba(255,255,255,0.58)">
+            <div style="background:linear-gradient(135deg,rgba(74,222,128,0.07) 0%,#141416 55%);border:1px solid rgba(74,222,128,0.15);border-radius:7px;padding:9px 10px;font-size:11px;color:rgba(255,255,255,0.6)">
               <div style="font-weight:500;margin-bottom:3px">Bio Lab Report</div>
-              <div style="font-size:10px;color:rgba(245,158,11,0.75)">Due Wed</div>
+              <div style="font-size:10px;color:rgba(245,158,11,0.8)">Due Wed</div>
             </div>
           </div>
           <div style="flex:1">
-            <div style="font-size:10px;color:rgba(255,255,255,0.22);text-align:center;padding:4px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:7px">IN PROGRESS</div>
-            <div style="background:linear-gradient(135deg,rgba(245,158,11,0.08) 0%,#141416 55%);border:1px solid rgba(245,158,11,0.14);border-radius:7px;padding:9px 10px;font-size:11px;color:rgba(255,255,255,0.58)">
+            <div style="font-size:10px;color:rgba(255,255,255,0.2);text-align:center;padding:4px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:7px">IN PROGRESS</div>
+            <div style="background:linear-gradient(135deg,rgba(245,158,11,0.08) 0%,#141416 55%);border:1px solid rgba(245,158,11,0.14);border-radius:7px;padding:9px 10px;font-size:11px;color:rgba(255,255,255,0.6)">
               <div style="font-weight:500;margin-bottom:3px">Essay Draft</div>
-              <div style="font-size:10px;color:rgba(124,122,255,0.75)">Due Fri</div>
+              <div style="font-size:10px;color:rgba(124,122,255,0.8)">Due Fri</div>
             </div>
           </div>
           <div style="flex:1">
-            <div style="font-size:10px;color:rgba(255,255,255,0.22);text-align:center;padding:4px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:7px">DONE</div>
-            <div style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.1);border-radius:7px;padding:9px 10px;font-size:11px;color:rgba(255,255,255,0.3)">
-              <div style="font-weight:500;margin-bottom:3px;text-decoration:line-through">History Reading</div>
-              <div style="font-size:10px;color:rgba(74,222,128,0.55)">&#10003; Done</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.2);text-align:center;padding:4px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:7px">DONE</div>
+            <div style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.1);border-radius:7px;padding:9px 10px;font-size:11px;color:rgba(255,255,255,0.28)">
+              <div style="text-decoration:line-through;font-weight:500;margin-bottom:3px">History Reading</div>
+              <div style="font-size:10px;color:rgba(74,222,128,0.6)">&#10003; Done</div>
             </div>
           </div>
         </div>
@@ -616,16 +978,16 @@
 
   <hr class="lp-divider">
 
-  <!-- Detail — Grades -->
-  <section class="lp-detail rev">
+  <!-- DETAIL — Grades -->
+  <section class="lp-detail rev lp-reveal">
     <div class="lp-detail-copy">
-      <div class="lp-detail-chip">Grades</div>
-      <h2 class="lp-detail-h2">Understand how you're <em>really doing</em></h2>
-      <p class="lp-detail-p">More than storing grades. See your GPA trend over time, run what-if scenarios before exams, and know exactly which subjects need more work.</p>
+      <div class="lp-detail-chip">&#9671; Grades</div>
+      <h2 class="lp-detail-h2">Know exactly <em>where you stand</em></h2>
+      <p class="lp-detail-p">More than storing numbers. See your GPA trend, run what-if scenarios before exams, and spot which subjects need more work before it's too late.</p>
       <ul class="lp-points">
         <li>Live GPA calculation with per-subject breakdown</li>
-        <li>Grade trend visualization over the semester</li>
-        <li>What-if calculator &mdash; "What do I need on the final?"</li>
+        <li>Grade trend visualization across the semester</li>
+        <li>What-if calculator &mdash; &ldquo;What do I need on the final?&rdquo;</li>
         <li>Import grades from PDF transcripts</li>
       </ul>
     </div>
@@ -633,39 +995,39 @@
       <div class="lp-panel">
         <div class="lp-panel-head">Grade summary</div>
         <div style="display:flex;gap:10px;margin-bottom:12px">
-          <div style="flex:1;background:linear-gradient(135deg,rgba(124,122,255,0.1) 0%,#141416 55%);border:1px solid rgba(124,122,255,0.2);border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:26px;font-weight:600;color:#f0f0f5;letter-spacing:-0.04em">3.8</div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.28);margin-top:2px">Current GPA</div>
+          <div style="flex:0 0 auto;background:linear-gradient(135deg,rgba(124,122,255,0.1) 0%,#141416 55%);border:1px solid rgba(124,122,255,0.2);border-radius:8px;padding:14px 16px;text-align:center;min-width:80px">
+            <div style="font-size:28px;font-weight:600;color:#f0f0f5;letter-spacing:-0.04em">3.8</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.28);margin-top:2px">GPA</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;gap:6px">
-            <div style="background:linear-gradient(135deg,rgba(74,222,128,0.08) 0%,#141416 55%);border:1px solid rgba(74,222,128,0.15);border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:11px;color:rgba(255,255,255,0.48)">Math</span>
+            <div style="background:linear-gradient(135deg,rgba(74,222,128,0.08) 0%,#141416 55%);border:1px solid rgba(74,222,128,0.14);border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:11px;color:rgba(255,255,255,0.45)">Math</span>
               <span style="font-size:12px;font-weight:600;color:#4ade80">A</span>
             </div>
             <div style="background:linear-gradient(135deg,rgba(99,179,237,0.08) 0%,#141416 55%);border:1px solid rgba(99,179,237,0.14);border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:11px;color:rgba(255,255,255,0.48)">Biology</span>
+              <span style="font-size:11px;color:rgba(255,255,255,0.45)">Biology</span>
               <span style="font-size:12px;font-weight:600;color:#63b3ed">B+</span>
             </div>
             <div style="background:linear-gradient(135deg,rgba(245,158,11,0.08) 0%,#141416 55%);border:1px solid rgba(245,158,11,0.14);border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:11px;color:rgba(255,255,255,0.48)">Literature</span>
+              <span style="font-size:11px;color:rgba(255,255,255,0.45)">Literature</span>
               <span style="font-size:12px;font-weight:600;color:#f59e0b">B</span>
             </div>
           </div>
         </div>
-        <div style="background:rgba(124,122,255,0.06);border:1px solid rgba(124,122,255,0.12);border-radius:8px;padding:11px 13px">
-          <div style="font-size:10px;color:rgba(124,122,255,0.78);font-weight:500;margin-bottom:4px">&#10022; What-if analysis</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.38);line-height:1.55">Need 91% on your Bio final to hit an A&minus;. You've got this.</div>
+        <div style="background:rgba(124,122,255,0.06);border:1px solid rgba(124,122,255,0.12);border-radius:8px;padding:11px 14px">
+          <div style="font-size:10px;color:rgba(124,122,255,0.82);font-weight:500;margin-bottom:5px">&#10022; What-if analysis</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.38);line-height:1.6">Need 91% on your Bio final to hit A&minus;. You've got this.</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Stats strip -->
-  <div class="lp-stats-strip">
+  <!-- STATS STRIP -->
+  <div class="lp-stats-strip lp-reveal">
     <div class="lp-stats-inner">
       <div class="lp-stat">
         <div class="lp-stat-val">6+</div>
-        <div class="lp-stat-lbl">Core modules</div>
+        <div class="lp-stat-lbl">Integrated modules</div>
       </div>
       <div class="lp-stat">
         <div class="lp-stat-val">&infin;</div>
@@ -677,32 +1039,74 @@
       </div>
       <div class="lp-stat">
         <div class="lp-stat-val">Free</div>
-        <div class="lp-stat-lbl">Always, for students</div>
+        <div class="lp-stat-lbl">For students, always</div>
       </div>
     </div>
   </div>
 
-  <!-- Final CTA -->
-  <section class="lp-cta-section">
-    <div class="lp-cta-glow"></div>
-    <h2 class="lp-cta-h2">Start your semester <em>right.</em></h2>
-    <p class="lp-cta-note">Free for students. No credit card needed.</p>
-    <button class="lp-cta-primary" onclick="window.openSignIn()" style="font-size:15px;padding:14px 34px">
-      Get started free &rarr;
-    </button>
+  <!-- FINAL CTA -->
+  <section class="lp-cta-final">
+    <div class="lp-cta-inner">
+      <h2 class="lp-cta-h2 lp-reveal">Start your semester<br><em>right.</em></h2>
+      <p class="lp-cta-note lp-reveal lp-reveal-delay-1">Free for students &middot; No credit card &middot; Works in your browser</p>
+      <button class="lp-cta-primary lp-reveal lp-reveal-delay-2" onclick="window.openSignIn()" style="font-size:15px;padding:14px 32px">
+        Get started free
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
   </section>
 
-  <!-- Footer -->
+  <!-- FOOTER -->
   <footer class="lp-footer">
-    <div class="lp-footer-brand">
-      <div class="lp-footer-mark">&#10022;</div>
-      <span class="lp-footer-copy">Scholar &mdash; academic notebook</span>
+    <div class="lp-footer-left">
+      <div class="lp-footer-brand">
+        <div class="lp-footer-mark">&#10022;</div>
+        <span class="lp-footer-name">Scholar</span>
+      </div>
+      <div class="lp-footer-tagline">Academic notebook for serious students.</div>
     </div>
     <div class="lp-footer-links">
-      <a href="#" onclick="window.openSignIn();return false">Sign in</a>
-      <a href="mailto:hello@scholar-is.live">Contact</a>
+      <div class="lp-footer-col">
+        <div class="lp-footer-col-head">Product</div>
+        <a href="#" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'});return false">Features</a>
+        <a href="#" onclick="window.openSignIn();return false">Sign in</a>
+        <a href="#" onclick="window.openSignIn();return false">Get started</a>
+      </div>
+      <div class="lp-footer-col">
+        <div class="lp-footer-col-head">Contact</div>
+        <a href="mailto:hello@scholar-is.live">hello@scholar-is.live</a>
+      </div>
     </div>
   </footer>
+  <div class="lp-footer-bottom">
+    <span>&copy; 2025 Scholar. Built for students.</span>
+    <span>scholar-is.live</span>
+  </div>
+
+  <!-- scroll reveal init (runs when landing is visible) -->
+  <script id="lp-reveal-script" type="text/javascript">
+    function initReveal() {
+      if (!window.IntersectionObserver) {
+        document.querySelectorAll('#landing .lp-reveal').forEach(function(el) {
+          el.classList.add('lp-in');
+        });
+        return;
+      }
+      var obs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (e.isIntersecting) {
+            e.target.classList.add('lp-in');
+            obs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.07, rootMargin: '0px 0px -30px 0px' });
+      document.querySelectorAll('#landing .lp-reveal').forEach(function(el) {
+        obs.observe(el);
+      });
+    }
+  </script>
 
 </div><!-- /landing -->
 
@@ -744,10 +1148,20 @@
   function hideSplash() {
     var el = document.getElementById('initial-screen');
     el.style.opacity = '0';
-    setTimeout(function() { el.style.display = 'none'; }, 260);
+    setTimeout(function() { el.style.display = 'none'; }, 300);
   }
 
-  // Hide root until auth resolves
+  function showLanding() {
+    var lp = document.getElementById('landing');
+    lp.classList.add('lp-show');
+    // kick off scroll reveals after a frame
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        if (typeof initReveal === 'function') initReveal();
+      });
+    });
+  }
+
   document.getElementById('root').style.display = 'none';
 
   window.__clerkReady = new Promise(function(resolve) {
@@ -757,21 +1171,16 @@
         window.__clerk = window.Clerk;
 
         if (window.Clerk.user) {
-          // Already signed in — reveal the app
           hideSplash();
           document.getElementById('root').style.display = '';
           resolve(window.Clerk.user);
         } else {
-          // Not signed in — show landing page
           hideSplash();
-          var lp = document.getElementById('landing');
-          lp.style.display = 'block';
-          requestAnimationFrame(function() { lp.classList.add('lp-visible'); });
-
+          showLanding();
           window.Clerk.addListener(function(state) {
             if (state.user) {
               document.getElementById('landing').style.display = 'none';
-              document.getElementById('landing').classList.remove('lp-visible');
+              document.getElementById('landing').classList.remove('lp-show');
               document.getElementById('clerk-overlay').style.display = 'none';
               document.getElementById('root').style.display = '';
               resolve(state.user);
@@ -953,7 +1362,6 @@ function App() {
 
   const isNote = route.view === "subject" && route.sub === "notes";
   const isQuiz = route.view === "quiz";
-
   const subjectAccent = route.view === "subject" && route.id ? (subjectBy(route.id)?.color) : null;
   const effectiveAccent = subjectAccent || tweaks.accent;
 
@@ -1161,16 +1569,13 @@ function RouteView({ route, go, tweaks, setTweak }) {
       if (tweaks.homeVariant === "focus")    return <DashFocus view={tweaks.subjectView} />;
       if (tweaks.homeVariant === "timeline") return <DashTimeline view={tweaks.subjectView} />;
       return <DashCombined view={tweaks.subjectView} headerWidget={tweaks.headerWidget} />;
-    case "homework":
-      return <HomeworkContent />;
-    case "homework-detail":
-      return <HomeworkDetailPage hwId={route.id} />;
+    case "homework":      return <HomeworkContent />;
+    case "homework-detail": return <HomeworkDetailPage hwId={route.id} />;
     case "quizzes":
       return <QuizzesContent onTakeQuiz={(t, deckId) => go("quiz/" + t + (deckId ? "/" + deckId : ""))} />;
     case "quiz":
       return <TakeQuiz type={route.quizType} deckId={route.deckId} onExit={() => go("quizzes")} />;
-    case "quiz-detail":
-      return <QuizDetailPage quizId={route.id} />;
+    case "quiz-detail":   return <QuizDetailPage quizId={route.id} />;
     case "notes":
       return <NotesIndexContent
         onOpenSubject={(id) => go("subject:" + id)}
@@ -1190,16 +1595,12 @@ function RouteView({ route, go, tweaks, setTweak }) {
         onOpenQuiz={(t, deckId) => go("quiz/" + t + (deckId ? "/" + deckId : ""))}
         onOpenHomework={() => go("homework")}
       />;
-    case "tools":
-      return <ToolsContent />;
-    case "schedule":
-      return <ScheduleContent />;
-    case "grades":
-      return <GradesContent />;
+    case "tools":       return <ToolsContent />;
+    case "schedule":    return <ScheduleContent />;
+    case "grades":      return <GradesContent />;
     case "flashcards":
       return <FlashcardsContent onTakeQuiz={(t, deckId) => go("quiz/" + t + (deckId ? "/" + deckId : ""))} />;
-    default:
-      return <NotFound go={go} />;
+    default:            return <NotFound go={go} />;
   }
 }
 
