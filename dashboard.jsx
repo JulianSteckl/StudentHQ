@@ -583,6 +583,104 @@ function DashHeaderWidget({ variant, allHW, allQuizzes, sched }) {
   return null;
 }
 
+// ── Dashboard stat overview bar ──────────────────────────────────────────────
+function DashMetaBar({ allHW, allQuizzes }) {
+  const openCount   = allHW.filter(h => !h.done).length;
+  const urgentCount = allHW.filter(h => !h.done && h.urgent).length;
+  const doneToday   = allHW.filter(h => h.done).length;
+  const { streak }  = nbGetStreakData();
+
+  // Derive GPA from grade store (0-100 pct entries)
+  const gpa = React.useMemo(() => {
+    try {
+      const state = JSON.parse(localStorage.getItem("nb-state-v1") || "{}");
+      const rows = Object.values(state.grades || {}).flat().filter(g => g && typeof g.pct === "number");
+      if (!rows.length) return null;
+      const avg = rows.reduce((a, g) => a + g.pct, 0) / rows.length;
+      const g4 = avg >= 93 ? 4.0 : avg >= 90 ? 3.7 : avg >= 87 ? 3.3 : avg >= 83 ? 3.0 : avg >= 80 ? 2.7 : avg >= 77 ? 2.3 : avg >= 73 ? 2.0 : avg >= 70 ? 1.7 : avg >= 67 ? 1.3 : avg >= 65 ? 1.0 : 0.7;
+      return g4.toFixed(1);
+    } catch { return null; }
+  }, []);
+
+  const stats = [
+    {
+      label: "Open tasks",
+      val: openCount,
+      sub: urgentCount > 0 ? urgentCount + " urgent" : doneToday > 0 ? doneToday + " done today" : "all on track",
+      subColor: urgentCount > 0 ? "var(--danger)" : doneToday > 0 ? "var(--done)" : "var(--ink-3)",
+      border: urgentCount > 0 ? "rgba(255,107,107,0.28)" : "rgba(82,196,125,0.16)",
+      glow: urgentCount > 0 ? "rgba(255,107,107,0.06)" : "rgba(82,196,125,0.04)",
+      onClick: () => { window.location.hash = "#/homework"; },
+    },
+    {
+      label: "GPA",
+      val: gpa != null ? gpa : "—",
+      sub: gpa != null ? "this semester" : "add grades →",
+      subColor: gpa != null ? "var(--ink-2)" : "var(--ink-3)",
+      border: "rgba(124,122,255,0.2)",
+      glow: "rgba(124,122,255,0.05)",
+      onClick: () => { window.location.hash = "#/grades"; },
+    },
+    {
+      label: "Study streak",
+      val: streak,
+      sub: streak >= 7 ? "week+ streak 🔥" : streak > 0 ? "day" + (streak !== 1 ? "s" : "") + " running" : "start today",
+      subColor: streak >= 7 ? "var(--accent)" : streak > 0 ? "var(--ink-2)" : "var(--ink-3)",
+      border: streak > 0 ? "rgba(124,122,255,0.22)" : "var(--hairline)",
+      glow: streak > 0 ? "rgba(124,122,255,0.06)" : "transparent",
+      icon: Ico.flame,
+    },
+    {
+      label: "Quizzes ahead",
+      val: allQuizzes.length,
+      sub: allQuizzes.length > 0 ? "next: " + (allQuizzes[0] ? (allQuizzes[0].when || allQuizzes[0].dateStr || "soon") : "soon") : "none scheduled",
+      subColor: allQuizzes.length > 0 ? "var(--ink-2)" : "var(--ink-3)",
+      border: allQuizzes.length > 0 ? "rgba(255,255,255,0.1)" : "var(--hairline)",
+      glow: "transparent",
+      onClick: () => { window.location.hash = "#/quizzes"; },
+    },
+  ];
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 24 }}>
+      {stats.map((s, i) => (
+        <div key={i}
+          onClick={s.onClick}
+          style={{
+            background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%), var(--surface)",
+            border: "1px solid " + s.border,
+            borderRadius: 10, padding: "15px 18px",
+            position: "relative", overflow: "hidden",
+            cursor: s.onClick ? "pointer" : "default",
+            transition: "border-color 0.15s, transform 0.2s cubic-bezier(0.22,1,0.36,1), box-shadow 0.2s",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.22)",
+          }}
+          onMouseEnter={e => { if (s.onClick) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 22px rgba(0,0,0,0.35)"; } }}
+          onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.22)"; }}
+        >
+          {/* Background tint */}
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 120% 80% at 0% 0%, " + s.glow + " 0%, transparent 70%)", pointerEvents: "none" }} />
+          {/* Top shimmer line */}
+          <div style={{ position: "absolute", top: 0, left: "15%", right: "15%", height: "1px", background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 50%, transparent)", pointerEvents: "none" }} />
+
+          <div style={{ position: "relative" }}>
+            <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.13em", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+              {s.icon && <span style={{ color: "var(--accent)", opacity: 0.85, lineHeight: 1 }}>{s.icon}</span>}
+              {s.label}
+            </div>
+            <div style={{ fontFamily: "var(--f-display)", fontSize: 36, lineHeight: 1, color: "var(--ink)", letterSpacing: "-0.035em" }}>
+              {s.val}
+            </div>
+            <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: s.subColor, marginTop: 7, letterSpacing: "0.02em" }}>
+              {s.sub}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function DashCombined({ view, headerWidget = "stats" }) {
   const store = useNbStore(); // re-renders on every store change
   const allHW = React.useMemo(() => [...HOMEWORK, ...store.homework], [store.homework]);
@@ -678,6 +776,11 @@ function DashCombined({ view, headerWidget = "stats" }) {
 
       {/* Customizer panel */}
       {customizerOpen && <DashboardCustomizer prefs={prefs} onClose={() => setCustomizerOpen(false)} />}
+
+      {/* Stat overview bar */}
+      <div className="pg-section" style={{ animationDelay: "0.08s" }}>
+        <DashMetaBar allHW={allHW} allQuizzes={allQuizzes} />
+      </div>
 
       {/* AI custom widgets */}
       {prefs.custom.length > 0 && (
@@ -830,128 +933,241 @@ function DashCombined({ view, headerWidget = "stats" }) {
         {/* Col 1 — Homework + Quizzes */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div className="dash-zone-label">Workload</div>
-          {W("homework") && <div className="sn-card">
-            <h3 className="sn-card-title">
-              <span>Due today · <span className="num">{todayHW.length}</span></span>
-              <a className="mono" style={{ color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none", cursor: "pointer" }} onClick={() => window.location.hash = "#/homework"}>ALL HOMEWORK →</a>
-            </h3>
-            {todayHW.length === 0
-              ? <div style={{ padding: "14px 0 6px", display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{ fontFamily: "var(--f-display)", fontSize: 32, lineHeight: 1, color: "var(--ink-3)", opacity: 0.2 }}>✓</div>
-                  <div>
-                    <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink)", fontSize: 16, marginBottom: 3 }}>All clear today.</div>
-                    <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)" }}>Nothing due — you're ahead.</div>
-                  </div>
+          {W("homework") && <div className="sn-card" style={{ padding: 0, overflow: "hidden" }}>
+            {/* Card header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px 10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {Ico.hw}
                 </div>
-              : <HomeworkList items={todayHW} compact />}
+                <span style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                  Due today
+                </span>
+                {todayHW.length > 0 && (
+                  <span style={{ fontFamily: "var(--f-mono)", fontSize: 10, background: todayHW.some(h => h.urgent) ? "rgba(255,107,107,0.14)" : "rgba(255,255,255,0.06)", color: todayHW.some(h => h.urgent) ? "var(--danger)" : "var(--ink-3)", borderRadius: 4, padding: "1px 7px", border: "1px solid " + (todayHW.some(h => h.urgent) ? "rgba(255,107,107,0.22)" : "rgba(255,255,255,0.07)") }}>
+                    {todayHW.length}
+                  </span>
+                )}
+              </div>
+              <a style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", textDecoration: "none", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.1em", display: "flex", alignItems: "center", gap: 4, transition: "color 0.12s" }}
+                onClick={() => window.location.hash = "#/homework"}
+                onMouseEnter={e => e.currentTarget.style.color = "var(--ink-2)"}
+                onMouseLeave={e => e.currentTarget.style.color = "var(--ink-3)"}
+              >
+                All homework {Ico.arrow}
+              </a>
+            </div>
+
+            {/* Items */}
+            {todayHW.length === 0 ? (
+              <div style={{ padding: "8px 18px 18px", display: "flex", alignItems: "center", gap: 13 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(82,196,125,0.1)", border: "1px solid rgba(82,196,125,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--done)" strokeWidth="2" strokeLinecap="round"><path d="M3 8l3.5 3.5L13 5"/></svg>
+                </div>
+                <div>
+                  <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 15, color: "var(--ink)", marginBottom: 2 }}>All clear today.</div>
+                  <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)" }}>Nothing due — you're ahead.</div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                {todayHW.map((h, i) => {
+                  const sb = subjectBy(h.subject);
+                  return (
+                    <div key={h.id}
+                      onClick={() => window.location.hash = "#/homework"}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 11,
+                        padding: "10px 18px",
+                        borderBottom: i < todayHW.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                        cursor: "pointer", transition: "background 0.12s",
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"}
+                      onMouseLeave={e => e.currentTarget.style.background = ""}
+                    >
+                      {/* Subject color bar */}
+                      <div style={{ width: 3, height: 32, borderRadius: 2, background: sb.color, flexShrink: 0, boxShadow: "0 0 6px " + sb.color + "60" }} />
+
+                      {/* Checkbox */}
+                      <div style={{ width: 16, height: 16, borderRadius: 4, border: "1.5px solid rgba(255,255,255,0.14)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }} />
+
+                      {/* Content */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
+                          {h.title}
+                        </div>
+                        <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)", marginTop: 2, display: "flex", alignItems: "center", gap: 5 }}>
+                          <span style={{ color: sb.color, opacity: 0.9 }}>{sb.short}</span>
+                          {h.est && h.est !== "—" && <><span style={{ opacity: 0.35 }}>·</span><span>{h.est}</span></>}
+                        </div>
+                      </div>
+
+                      {/* Due badge */}
+                      {h.urgent ? (
+                        <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, padding: "2px 7px", borderRadius: 4, background: "rgba(255,107,107,0.12)", color: "var(--danger)", border: "1px solid rgba(255,107,107,0.2)", flexShrink: 0 }}>urgent</span>
+                      ) : (
+                        <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", flexShrink: 0 }}>{h.due}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>}
 
-          {W("quizzes") && <div className="sn-card">
-            <h3 className="sn-card-title"><span>Quizzes ahead</span><span className="num mono" style={{ fontSize: 10.5 }}>{allQuizzes.length}</span></h3>
-            {allQuizzes.length === 0
-              ? <div style={{ fontFamily: "var(--f-mono)", fontSize: 11.5, color: "var(--ink-3)", padding: "8px 0", fontStyle: "italic" }}>No quizzes scheduled yet.</div>
-              : <div style={{ display: "flex", flexDirection: "column" }}>
-              {allQuizzes.map((q, qi) => {
-                const sb = subjectBy(q.subject);
-                return (
-                  <div key={q.id} style={{
-                    display: "grid", gridTemplateColumns: "3px 1fr auto", gap: 12,
-                    alignItems: "center", padding: "9px 0",
-                    borderBottom: qi < allQuizzes.length - 1 ? "1px solid var(--hairline)" : "none",
-                  }}>
-                    <div style={{ width: 3, height: "100%", minHeight: 32, borderRadius: 2, background: sb.color, alignSelf: "stretch" }}></div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3 }}>{q.title}</div>
-                      <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)", marginTop: 3, display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ color: sb.color, opacity: 0.85 }}>{sb.short}</span>
-                        <span style={{ opacity: 0.4 }}>·</span>
-                        <span>{q.when || q.dateStr || "TBD"}</span>
-                        {q.length && <><span style={{ opacity: 0.4 }}>·</span><span>{q.length}</span></>}
+          {W("quizzes") && <div className="sn-card" style={{ padding: 0, overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px 10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{Ico.quiz}</div>
+                <span style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Quizzes ahead</span>
+                {allQuizzes.length > 0 && <span style={{ fontFamily: "var(--f-mono)", fontSize: 10, background: "rgba(255,255,255,0.06)", color: "var(--ink-3)", borderRadius: 4, padding: "1px 7px", border: "1px solid rgba(255,255,255,0.07)" }}>{allQuizzes.length}</span>}
+              </div>
+              <a style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.1em", transition: "color 0.12s" }}
+                onClick={() => window.location.hash = "#/quizzes"}
+                onMouseEnter={e => e.currentTarget.style.color = "var(--ink-2)"}
+                onMouseLeave={e => e.currentTarget.style.color = "var(--ink-3)"}
+              >All →</a>
+            </div>
+            {allQuizzes.length === 0 ? (
+              <div style={{ padding: "8px 18px 18px" }}>
+                <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", fontSize: 14, color: "var(--ink-3)" }}>No quizzes scheduled.</div>
+                <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)", marginTop: 4 }}>Add a quiz to track prep confidence.</div>
+              </div>
+            ) : (
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                {allQuizzes.map((q, qi) => {
+                  const sb = subjectBy(q.subject);
+                  return (
+                    <div key={q.id} style={{
+                      display: "flex", alignItems: "flex-start", gap: 10,
+                      padding: "11px 18px",
+                      borderBottom: qi < allQuizzes.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                      background: "linear-gradient(135deg, " + sb.color + "08 0%, transparent 50%)",
+                    }}>
+                      <div style={{ width: 3, alignSelf: "stretch", minHeight: 36, borderRadius: 2, background: sb.color, flexShrink: 0, boxShadow: "0 0 6px " + sb.color + "50" }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)", lineHeight: 1.3, marginBottom: 3 }}>{q.title}</div>
+                        <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)", display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                          <span style={{ color: sb.color, opacity: 0.9 }}>{sb.short}</span>
+                          <span style={{ opacity: 0.3 }}>·</span>
+                          <span>{q.when || q.dateStr || "TBD"}</span>
+                          {q.length && <><span style={{ opacity: 0.3 }}>·</span><span>{q.length}</span></>}
+                        </div>
+                        {q.confidence != null && <div style={{ marginTop: 6 }}><ConfidenceMeter value={q.confidence} /></div>}
                       </div>
-                      {q.confidence != null && <div style={{ marginTop: 5 }}><ConfidenceMeter value={q.confidence} /></div>}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); window.location.hash = "#/quiz/mcq"; }}
+                        style={{ flexShrink: 0, background: "rgba(124,122,255,0.12)", border: "1px solid rgba(124,122,255,0.22)", color: "var(--accent)", borderRadius: 6, padding: "5px 10px", fontSize: 11, fontFamily: "var(--f-mono)", cursor: "pointer", transition: "all 0.15s", letterSpacing: "0.04em", alignSelf: "flex-start" }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "rgba(124,122,255,0.2)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "rgba(124,122,255,0.12)"; }}
+                      >Study →</button>
                     </div>
-                    <button className="sn-btn" onClick={() => window.location.hash = "#/quiz/mcq"} style={{ fontSize: 11, padding: "4px 8px", flexShrink: 0 }}>Study →</button>
-                  </div>
-                );
-              })}
-            </div>}
+                  );
+                })}
+              </div>
+            )}
           </div>}
         </div>
 
         {/* Col 2 — Today schedule + Recent notes */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div className="dash-zone-label">Schedule & Notes</div>
-          {W("schedule") && <div className="sn-card">
-            <h3 className="sn-card-title">
-              <span>Today's schedule</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <a className="mono" onClick={() => window.dispatchEvent(new CustomEvent("openScheduleEditor"))} style={{ cursor: "pointer", color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none" }}>EDIT →</a>
-                <span className="mono">{["SUN","MON","TUE","WED","THU","FRI","SAT"][new Date().getDay()]} {(new Date().getMonth()+1)}/{new Date().getDate()}</span>
-              </span>
-            </h3>
-            <div>
-              {schedule.length === 0
-                ? <div style={{ padding: "10px 0 6px" }}>
-                    <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 14, marginBottom: 6 }}>No schedule set up yet.</div>
-                    <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)", marginBottom: 8 }}>Add your class times to unlock the full dashboard.</div>
-                    <a onClick={() => window.dispatchEvent(new CustomEvent("openScheduleEditor"))} style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--accent)", cursor: "pointer", textDecoration: "none" }}>Set up schedule →</a>
-                  </div>
-                : schedule.map((row, i) => {
-                    const sb = row.subject ? subjectBy(row.subject) : null;
-                    const isNow = i === sched.nowIdx;
-                    const isPast = sched.nowIdx >= 0 ? i < sched.nowIdx : (sched.nextIdx >= 0 ? i < sched.nextIdx : false);
-                    return (
-                      <div key={i} className={isNow ? "sched-now-row" : ""}
-                        style={{
-                          display: "grid", gridTemplateColumns: "40px 4px 1fr", gap: 10,
-                          padding: isNow ? "7px 6px" : "6px 0",
-                          borderBottom: "1px dashed var(--hairline)",
-                          opacity: isPast ? 0.4 : 1,
-                          margin: isNow ? "0 -6px" : "0",
-                        }}>
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
-                          {isNow && <span style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--done)", flexShrink: 0, marginTop: 4, animation: "pulse-dot 2s ease-in-out infinite" }} />}
-                          <span style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: isNow ? "var(--ink-2)" : "var(--ink-3)", paddingTop: 1 }}>{row.time}</span>
-                        </div>
-                        <div style={{ background: sb ? sb.color : "var(--hairline)", borderRadius: 2, opacity: isPast ? 0.5 : 1 }}></div>
-                        <div>
-                          <div style={{ fontSize: 13, fontWeight: isNow ? 600 : 400, color: isNow ? "var(--ink)" : "inherit" }}>
-                            {sb ? sb.short : "Lunch"}
-                            {isNow && <span style={{ marginLeft: 6, fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--done)", textTransform: "uppercase", letterSpacing: "0.1em" }}>live</span>}
-                          </div>
-                          <div style={{ fontSize: 11.5, color: "var(--ink-3)" }}>{row.note}</div>
-                        </div>
+          {W("schedule") && <div className="sn-card" style={{ padding: 0, overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px 10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{Ico.cal}</div>
+                <span style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Schedule</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <a style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.1em", transition: "color 0.12s" }}
+                  onClick={() => window.dispatchEvent(new CustomEvent("openScheduleEditor"))}
+                  onMouseEnter={e => e.currentTarget.style.color = "var(--ink-2)"}
+                  onMouseLeave={e => e.currentTarget.style.color = "var(--ink-3)"}
+                >Edit →</a>
+                <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)" }}>
+                  {["SUN","MON","TUE","WED","THU","FRI","SAT"][new Date().getDay()]}
+                </span>
+              </div>
+            </div>
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+              {schedule.length === 0 ? (
+                <div style={{ padding: "12px 18px 18px" }}>
+                  <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 14, marginBottom: 5 }}>No schedule set up yet.</div>
+                  <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)", marginBottom: 10 }}>Add classes to unlock the live in-session view.</div>
+                  <a onClick={() => window.dispatchEvent(new CustomEvent("openScheduleEditor"))} style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--accent)", cursor: "pointer" }}>Set up schedule →</a>
+                </div>
+              ) : schedule.map((row, i) => {
+                const sb = row.subject ? subjectBy(row.subject) : null;
+                const isNow = i === sched.nowIdx;
+                const isPast = sched.nowIdx >= 0 ? i < sched.nowIdx : (sched.nextIdx >= 0 ? i < sched.nextIdx : false);
+                return (
+                  <div key={i}
+                    style={{
+                      display: "grid", gridTemplateColumns: "46px 3px 1fr", gap: 10,
+                      padding: "8px 18px",
+                      borderBottom: i < schedule.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                      opacity: isPast ? 0.38 : 1,
+                      background: isNow ? (sb ? "linear-gradient(135deg, " + sb.color + "10 0%, transparent 55%)" : "rgba(124,122,255,0.05)") : "transparent",
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 1 }}>
+                      {isNow && <span className="live-dot" style={{ marginBottom: 3, alignSelf: "flex-start" }} />}
+                      <span style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: isNow ? (sb ? sb.color : "var(--accent)") : "var(--ink-3)", lineHeight: 1.2, letterSpacing: "0.02em" }}>{row.time}</span>
+                      {row.end && row.end !== "—" && <span style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", opacity: 0.6 }}>{row.end}</span>}
+                    </div>
+                    <div style={{ background: sb ? sb.color : "var(--hairline)", borderRadius: 2, opacity: isPast ? 0.4 : 0.85, boxShadow: isNow && sb ? "0 0 6px " + sb.color + "70" : "none" }}></div>
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                      <div style={{ fontSize: 13, fontWeight: isNow ? 600 : 400, color: isNow ? "var(--ink)" : "var(--ink-2)", letterSpacing: "-0.01em", display: "flex", alignItems: "center", gap: 7 }}>
+                        {sb ? sb.short : "Lunch"}
+                        {isNow && <span style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--done)", textTransform: "uppercase", letterSpacing: "0.1em", background: "rgba(82,196,125,0.1)", border: "1px solid rgba(82,196,125,0.2)", borderRadius: 3, padding: "1px 5px" }}>live</span>}
                       </div>
-                    );
-                  })
-              }
+                      {row.note && <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-3)", marginTop: 1 }}>{row.note}</div>}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>}
 
-          {W("recent-notes") && <div className="sn-card">
-            <h3 className="sn-card-title"><span>Recent notes</span><a className="mono" onClick={() => window.location.hash = "#/notes"} style={{ color: "var(--ink-2)", fontSize: 10.5, textDecoration: "none", cursor: "pointer" }}>ALL →</a></h3>
-            <div style={{ display: "flex", flexDirection: "column" }}>
+          {W("recent-notes") && <div className="sn-card" style={{ padding: 0, overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px 10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{Ico.note}</div>
+                <span style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Recent notes</span>
+              </div>
+              <a style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.1em", transition: "color 0.12s" }}
+                onClick={() => window.location.hash = "#/notes"}
+                onMouseEnter={e => e.currentTarget.style.color = "var(--ink-2)"}
+                onMouseLeave={e => e.currentTarget.style.color = "var(--ink-3)"}
+              >All →</a>
+            </div>
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
               {dashRecentNotes.length === 0 ? (
-                <div style={{ padding: "12px 0 6px", display: "flex", flexDirection: "column", gap: 6 }}>
-                  <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 15 }}>Nothing written yet.</div>
-                  <a onClick={() => window.location.hash = "#/notes"} style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", cursor: "pointer", textDecoration: "none", textTransform: "uppercase", letterSpacing: "0.08em" }}>Open notes to start →</a>
+                <div style={{ padding: "12px 18px 18px" }}>
+                  <div style={{ fontFamily: "var(--f-display)", fontStyle: "italic", color: "var(--ink-3)", fontSize: 14, marginBottom: 5 }}>Nothing written yet.</div>
+                  <a onClick={() => window.location.hash = "#/notes"} style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--accent)", cursor: "pointer" }}>Open notes to start →</a>
                 </div>
               ) : dashRecentNotes.map((n, ni) => {
                 const sb = subjectBy(n.subject || n.subjectId);
                 if (!sb) return null;
                 return (
-                  <div key={n.id} onClick={() => window.location.hash = "#/subject/" + (n.subject || n.subjectId) + "/notes"}
-                    style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 0",
-                      borderBottom: ni < dashRecentNotes.length - 1 ? "1px solid var(--hairline)" : "none",
-                      cursor: "pointer", transition: "opacity 0.13s" }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = "0.7"}
-                    onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
-                    <div style={{ width: 3, height: 36, borderRadius: 1.5, background: sb.color, flexShrink: 0, marginTop: 2 }} />
+                  <div key={n.id}
+                    onClick={() => window.location.hash = "#/subject/" + (n.subject || n.subjectId) + "/notes"}
+                    style={{ display: "flex", alignItems: "center", gap: 11, padding: "10px 18px",
+                      borderBottom: ni < dashRecentNotes.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                      cursor: "pointer", transition: "background 0.12s",
+                      background: "linear-gradient(135deg, " + sb.color + "06 0%, transparent 50%)",
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"}
+                    onMouseLeave={e => e.currentTarget.style.background = "linear-gradient(135deg, " + sb.color + "06 0%, transparent 50%)"}
+                  >
+                    <div style={{ width: 3, height: 34, borderRadius: 2, background: sb.color, flexShrink: 0, boxShadow: "0 0 6px " + sb.color + "50" }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: "var(--f-display)", fontSize: 14, lineHeight: 1.25, color: "var(--ink)", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.title}</div>
-                      <div style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{sb.short}{n.when ? " · " + n.when : ""}</div>
+                      <div style={{ fontFamily: "var(--f-display)", fontSize: 14, lineHeight: 1.25, color: "var(--ink)", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>{n.title}</div>
+                      <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{sb.short}{n.when ? " · " + n.when : ""}</div>
                     </div>
-                    <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", paddingTop: 2 }}>→</span>
+                    <span style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--ink-3)", opacity: 0.5 }}>→</span>
                   </div>
                 );
               })}
@@ -964,33 +1180,28 @@ function DashCombined({ view, headerWidget = "stats" }) {
           <div className="dash-zone-label">Progress</div>
           {W("streak") && (() => {
             const { streak, best } = nbGetStreakData();
-            const milestoneMsg = streak >= 30 ? "30-day streak — legendary! 🏆"
+            const milestoneMsg = streak >= 30 ? "30-day streak — legendary 🏆"
               : streak >= 14 ? "2-week streak — unstoppable!"
               : streak >= 7  ? "One full week — great work!"
-              : streak >= 3  ? `${streak}-day streak — keep it up!`
+              : streak >= 3  ? streak + "-day streak — keep it up!"
               : streak === 1 ? "Day 1 — every streak starts here."
               : null;
             return (
-            <div className="sn-card">
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div className="sn-card" style={{ padding: 0, overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px 10px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{
-                    width: 26, height: 26, borderRadius: 6, flexShrink: 0,
-                    background: "rgba(124,122,255,0.12)", border: "1px solid rgba(124,122,255,0.2)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: "var(--accent)", fontSize: 11,
-                  }}>{Ico.flame}</div>
-                  <span className="mono" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-3)" }}>Study streak</span>
+                  <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(124,122,255,0.1)", border: "1px solid rgba(124,122,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "var(--accent)" }}>{Ico.flame}</div>
+                  <span style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Study streak</span>
                 </div>
-                {best > streak && (
-                  <div className="mono" style={{ fontSize: 9, color: "var(--ink-3)" }}>best: {best}d</div>
-                )}
+                {best > streak && <span style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--ink-3)" }}>best: {best}d</span>}
               </div>
-              <div style={{ fontFamily: "var(--f-display)", fontSize: 48, lineHeight: 1, color: "var(--ink)", letterSpacing: "-0.03em" }}>
-                {streak}<span style={{ fontSize: 16, color: "var(--ink-3)", letterSpacing: 0 }}> day{streak !== 1 ? "s" : ""}</span>
+              <div style={{ padding: "0 18px 6px" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
+                <div style={{ fontFamily: "var(--f-display)", fontSize: 44, lineHeight: 1, color: "var(--ink)", letterSpacing: "-0.035em" }}>{streak}</div>
+                <div style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--ink-3)" }}>day{streak !== 1 ? "s" : ""}</div>
               </div>
               {milestoneMsg && (
-                <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--accent)", marginTop: 3, letterSpacing: "0.04em" }}>{milestoneMsg}</div>
+                <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--accent)", marginBottom: 10, letterSpacing: "0.03em" }}>{milestoneMsg}</div>
               )}
               {/* Heatmap grid */}
               <div style={{ marginTop: 14 }}>
@@ -1021,36 +1232,46 @@ function DashCombined({ view, headerWidget = "stats" }) {
                 <span><span style={{ display: "inline-block", width: 7, height: 7, borderRadius: 2, background: "var(--accent)", marginRight: 4, verticalAlign: "middle" }} />Studied</span>
                 <span><span style={{ display: "inline-block", width: 7, height: 7, borderRadius: 2, background: "rgba(255,255,255,0.06)", marginRight: 4, verticalAlign: "middle" }} />Missed</span>
               </div>
+              </div>{/* /padding wrapper */}
             </div>
             );
           })()}
 
-          {W("subject-progress") && <div className="sn-card">
-            <h3 className="sn-card-title"><span>This week, by subject</span></h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {W("subject-progress") && <div className="sn-card" style={{ padding: 0, overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px 12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{Ico.grade}</div>
+                <span style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Progress</span>
+              </div>
+            </div>
+            <div style={{ padding: "0 18px 16px", display: "flex", flexDirection: "column", gap: 11 }}>
               {SUBJECTS.slice(0, 6).map((sb) => {
-                const open = allHW.filter((h) => h.subject === sb.id && !h.done).length;
-                const total = allHW.filter((h) => h.subject === sb.id).length;
-                const pct = total ? (1 - open / total) * 100 : 100;
-                const allClear = open === 0 && total > 0;
+                const open  = allHW.filter(h => h.subject === sb.id && !h.done).length;
+                const total = allHW.filter(h => h.subject === sb.id).length;
+                const pct   = total ? (1 - open / total) * 100 : 100;
+                const done  = open === 0 && total > 0;
+                const gradeLabel = sb.grade || null;
                 return (
-                  <div key={sb.id} style={{ display: "grid", gridTemplateColumns: "10px 1fr", gap: 10, alignItems: "center" }}>
-                    {/* Subject color dot */}
-                    <div style={{ width: 8, height: 8, borderRadius: 2, background: sb.color, flexShrink: 0, boxShadow: `0 0 6px ${sb.color}60` }} />
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-                        <span style={{ fontSize: 11.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "60%" }}>{sb.short}</span>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: 5, flexShrink: 0 }}>
-                          {allClear
-                            ? <span className="mono" style={{ fontSize: 9, color: "var(--done)" }}>✓ done</span>
-                            : <>
-                                <span className="mono" style={{ fontSize: 9, color: "var(--ink-3)" }}>{total - open}/{total}</span>
-                                <span className="mono" style={{ fontSize: 10, color: sb.color, opacity: 0.9, fontWeight: 500 }}>{Math.round(pct)}%</span>
-                              </>
-                          }
-                        </div>
+                  <div key={sb.id}
+                    onClick={() => window.location.hash = "#/subject/" + sb.id}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
+                        <div style={{ width: 7, height: 7, borderRadius: 2, background: sb.color, flexShrink: 0, boxShadow: "0 0 5px " + sb.color + "70" }} />
+                        <span style={{ fontSize: 12, color: "var(--ink-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>{sb.short}</span>
                       </div>
-                      <HatchBar id={sb.id} pct={pct} color={sb.color} />
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
+                        {gradeLabel && <span style={{ fontFamily: "var(--f-display)", fontSize: 13, color: sb.color, letterSpacing: "-0.01em" }}>{gradeLabel}</span>}
+                        {done
+                          ? <span style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "var(--done)" }}>✓</span>
+                          : <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-3)", letterSpacing: "0.02em" }}>{total > 0 ? Math.round(pct) + "%" : "—"}</span>
+                        }
+                      </div>
+                    </div>
+                    {/* Clean smooth bar — replaces hatch bar in compact view */}
+                    <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
+                      <div style={{ width: pct + "%", height: "100%", background: done ? "var(--done)" : sb.color, borderRadius: 2, opacity: 0.75, transition: "width 0.4s ease" }} />
                     </div>
                   </div>
                 );
@@ -1363,4 +1584,4 @@ function DashTimeline({ view }) {
   );
 }
 
-Object.assign(window, { Dashboard, DashCombined, DashFocus, DashTimeline, DashHeaderWidget, dueStringToDate });
+Object.assign(window, { Dashboard, DashCombined, DashFocus, DashTimeline, DashHeaderWidget, DashMetaBar, dueStringToDate });
